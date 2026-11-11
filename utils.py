@@ -27,9 +27,14 @@ def ratta_svar(u: Uppgift, input_svar: Any) -> str:
     if u.input_typ == 'flera_text':
         if all(str(s).strip() != "" for s in input_svar):
             try:
-                anv_svar = sorted([round(float(str(s).strip().replace(',', '.')), 4) for s in input_svar])
-                ratt_svar_sorted = sorted([round(float(x), 4) for x in u.ratt_svar])
-                return 'ratt' if anv_svar == ratt_svar_sorted else 'fel'
+                anv_svar = [round(float(str(s).strip().replace(',', '.')), 4) for s in input_svar]
+                ratt_svar_list = [round(float(x), 4) for x in u.ratt_svar]
+                
+                # Om svarstyp är 'ekvationssystem' krävs exakt ordning (x först, y sedan)
+                if u.svarstyp == 'ekvationssystem':
+                    return 'ratt' if anv_svar == ratt_svar_list else 'fel'
+                else:
+                    return 'ratt' if sorted(anv_svar) == sorted(ratt_svar_list) else 'fel'
             except ValueError:
                 return 'format'
         return 'tom'
