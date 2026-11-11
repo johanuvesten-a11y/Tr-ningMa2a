@@ -121,7 +121,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
     )
 
 def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
-    """Låddiagram (Boxplots), kvartiler och median."""
+    """Låddiagram (Boxplots), kvartiler och median - liggande format."""
     q1 = random.randint(15, 25)
     median = q1 + random.randint(5, 10)
     q3 = median + random.randint(5, 10)
@@ -129,8 +129,25 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
     max_v = q3 + random.randint(5, 10)
     
     fig = go.Figure()
-    fig.add_trace(go.Box(q1=[q1], median=[median], q3=[q3], lowerfence=[min_v], upperfence=[max_v], fillcolor='lightpink', line=dict(color='purple')))
-    fig.update_layout(height=250, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False)
+    fig.add_trace(go.Box(
+        q1=[q1], 
+        median=[median], 
+        q3=[q3], 
+        lowerfence=[min_v], 
+        upperfence=[max_v], 
+        orientation='h',  # Liggande låddiagram
+        fillcolor='lightpink', 
+        line=dict(color='purple')
+    ))
+    
+    fig.update_layout(
+        xaxis=dict(showgrid=True, zeroline=False, dtick=5),
+        yaxis=dict(showticklabels=False),
+        height=220, 
+        margin=dict(l=20, r=20, t=20, b=30), 
+        plot_bgcolor='white', 
+        showlegend=False
+    )
     
     typ = random.choice(['kvartilavstand', 'median'])
     if typ == 'kvartilavstand':
