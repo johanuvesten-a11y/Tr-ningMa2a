@@ -113,7 +113,7 @@ with col_h:
             generera_ny_uppgift()
             st.rerun()
     else:
-       with st.form(key=f"form_{uid}"):
+        with st.form(key=f"form_{uid}"):
             if u.input_typ == 'flera_text':
                 labels = ["x =", "y ="] if u.svarstyp == 'ekvationssystem' else [f"Svar {i+1}:" for i in range(len(u.ratt_svar))]
                 for i in range(len(u.ratt_svar)):
@@ -134,3 +134,11 @@ with col_h:
                 else:
                     ratt_txt = str(u.ratt_svar)
                 st.error(f"❌ Tyvärr fel. Rätt svar var: {ratt_txt}")
+            elif status == 'format':
+                st.warning("⚠️ Felaktigt format på svaret.")
+            elif status == 'tom':
+                st.warning("⚠️ Fyll i ett svar innan du rättar.")
+                
+            if st.button("Hoppa över / Nästa uppgift", use_container_width=True, key=f"skip_{uid}"):
+                generera_ny_uppgift()
+                st.rerun()
