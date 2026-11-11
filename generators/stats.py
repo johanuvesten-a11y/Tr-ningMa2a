@@ -121,7 +121,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
     )
 
 def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
-    """Låddiagram (Boxplots), kvartiler och median - liggande format."""
+    """Låddiagram (Boxplots), kvartiler och median - utan hover-värden."""
     q1 = random.randint(15, 25)
     median = q1 + random.randint(5, 10)
     q3 = median + random.randint(5, 10)
@@ -135,7 +135,8 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
         q3=[q3], 
         lowerfence=[min_v], 
         upperfence=[max_v], 
-        orientation='h',  # Liggande låddiagram
+        orientation='h',
+        hoverinfo='skip',  # Döljer informationen när muspekaren hålls över diagrammet
         fillcolor='lightpink', 
         line=dict(color='purple')
     ))
@@ -146,7 +147,8 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
         height=220, 
         margin=dict(l=20, r=20, t=20, b=30), 
         plot_bgcolor='white', 
-        showlegend=False
+        showlegend=False,
+        hovermode=False  # Stänger av all hover-interaktion i layouten
     )
     
     typ = random.choice(['kvartilavstand', 'median'])
