@@ -89,7 +89,7 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
     
     a1, b1 = random.randint(1, 4), random.choice([-3, -2, -1, 1, 2, 3])
     a2, b2 = random.choice([-3, -2, -1, 1, 2, 3]), random.randint(1, 4)
-    while a1*b2 == a2*b1:  # Undvik paralella linjer
+    while a1 * b2 == a2 * b1:  # Undvik parallella linjer
         b2 += 1
         
     c1 = a1 * x + b1 * y
@@ -98,19 +98,16 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
     eq1 = f"{formatera_polynom([(a1, 'x'), (b1, 'y')])} = {c1}"
     eq2 = f"{formatera_polynom([(a2, 'x'), (b2, 'y')])} = {c2}"
     
-    fraga_var = random.choice(['x', 'y'])
-    ratt_val = x if fraga_var == 'x' else y
-    
     return Uppgift(
         info_text="Givet ekvationssystemet:",
         latex_text=f"\\begin{{cases}} {eq1} \\\\ {eq2} \\end{{cases}}",
-        fraga=f"Bestäm värdet på {fraga_var}:",
-        ratt_svar=ratt_val,
-        input_typ="text",
-        svarstyp="int",
-        undertext="Lös systemet med substitutions- eller additionsmetoden."
+        fraga="Lös ekvationssystemet:",
+        ratt_svar=[float(x), float(y)],
+        input_typ="flera_text",
+        svarstyp="ekvationssystem",
+        undertext="Bestäm värdet på både x och y. Lös systemet med substitutions- eller additionsmetoden."
     )
-
+    
 def skapa_rationella_uttryck_uppgift(niva: int) -> Uppgift:
     """Förenkling av rationella uttryck."""
     a = random.randint(2, 5)
