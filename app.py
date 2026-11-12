@@ -2,9 +2,18 @@ import streamlit as st
 import random
 from models import Uppgift
 from utils import ratta_svar, visa_infobox
-from generators.algebra import (skapa_pq_uppgift, skapa_kvadrering_konjugat_uppgift,
-                                skapa_ekvationssystem_uppgift, skapa_rationella_uttryck_uppgift)
-from generators.functions import skapa_andragradsfunktion_uppgift, skapa_exp_potens_uppgift
+from generators.algebra import (
+    skapa_potensregler_uppgift,
+    skapa_kvadrering_konjugat_uppgift,
+    skapa_rationella_uttryck_uppgift,
+    skapa_pq_uppgift,
+    skapa_ekvationssystem_uppgift
+)
+from generators.functions import (
+    skapa_rata_linjen_uppgift,
+    skapa_andragradsfunktion_uppgift,
+    skapa_exp_potens_uppgift
+)
 from generators.geometry import skapa_geometri_uppgift
 from generators.stats import skapa_normalfordelning_uppgift, skapa_laddiagram_uppgift
 
@@ -22,13 +31,15 @@ input[type="text"] {
 """, unsafe_allow_html=True)
 
 KATEGORIER = {
-    "Andragradsekvationer & PQ": skapa_pq_uppgift,
+    "Potensregler": skapa_potensregler_uppgift,
     "Kvadrerings- & Konjugatregler": skapa_kvadrering_konjugat_uppgift,
     "Rationella Uttryck": skapa_rationella_uttryck_uppgift,
+    "Andragradsekvationer & PQ": skapa_pq_uppgift,
     "Linjära Ekvationssystem": skapa_ekvationssystem_uppgift,
+    "Räta linjens ekvation": skapa_rata_linjen_uppgift,
     "Andragradsfunktioner & Vertex": skapa_andragradsfunktion_uppgift,
     "Exponential- & Potensfunktioner": skapa_exp_potens_uppgift,
-    "Avstånds- & Mittpunktsformeln": skapa_geometri_uppgift,
+    "Pythagoras sats & Geometri": skapa_geometri_uppgift,
     "Normalfördelning": skapa_normalfordelning_uppgift,
     "Låddiagram & Kvartiler": skapa_laddiagram_uppgift
 }
@@ -83,6 +94,8 @@ if ny_niva != st.session_state.niva:
 # Huvudgränssnitt
 u = st.session_state.aktiv_uppgift
 st.title(f"Träning: {st.session_state.aktuell_kategori}")
+if st.session_state.aktuell_kategori == "Blandat (Slumpas)" and u.visnings_kategori:
+    st.caption(f"Område: {u.visnings_kategori} • Nivå {st.session_state.niva}")
 
 col_v, col_h = st.columns([1.2, 1], gap="large")
 
@@ -115,11 +128,17 @@ with col_h:
     else:
         with st.form(key=f"form_{uid}"):
             if u.input_typ == 'flera_text':
-                labels = ["x =", "y ="] if u.svarstyp == 'ekvationssystem' else [f"Svar {i+1}:" for i in range(len(u.ratt_svar))]
+                if u.flera_labels:
+                    labels = u.flera_labels
+                elif u.svarstyp in ['ekvationssystem', 'punkt']:
+                    labels = ["x =", "y ="]
+                else:
+                    labels = [f"Svar {i+1}:" for i in range(len(u.ratt_svar))]
                 for i in range(len(u.ratt_svar)):
                     st.text_input(labels[i], key=f"input_{uid}_{i}")
             elif u.input_typ == 'text':
-                st.text_input("Ditt svar:", key=f"input_single_{uid}")
+                label_txt = f"Ditt svar ({u.suffix}):" if u.suffix else "Ditt svar:"
+                st.text_input(label_txt, key=f"input_single_{uid}")
             elif u.input_typ == 'radio':
                 st.radio("Alternativ:", u.alternativ, index=None, key=f"input_single_{uid}")
             
@@ -127,20 +146,28 @@ with col_h:
             
         if rattat and status != 'ratt':
             if status == 'fel':
-                if u.svarstyp == 'ekvationssystem':
-                    ratt_txt = f"x = {int(u.ratt_svar[0])}, y = {int(u.ratt_svar[1])}"
+                if u.svarstyp in ['ekvationssystem', 'punkt']:
+                    ratt_txt = f"x = {u.ratt_svar[0]:g}, y = {u.ratt_svar[1]:g}".replace('.', ',')
+                elif u.svarstyp == 'ordered_float':
+                    ratt_txt = f"μ = {u.ratt_svar[0]:g}, σ = {u.ratt_svar[1]:g}".replace('.', ',')
                 elif u.svarstyp == 'array_float':
                     ratt_txt = ' och '.join([f"{a:g}".replace('.', ',') for a in u.ratt_svar])
+                elif isinstance(u.ratt_svar, float):
+                    ratt_txt = f"{u.ratt_svar:g}".replace('.', ',')
                 else:
                     ratt_txt = str(u.ratt_svar)
-                st.error(f"❌ Tyvärr fel. Rätt svar var: {ratt_txt}")
+                enhet_str = f" {u.suffix}" if u.suffix else ""
+                st.error(f"❌ Tyvärr fel. Rätt svar var: {ratt_txt}{enhet_str}")
+            elif status == 'format_saknar_x':
+                st.warning("⚠️ Symmetrilinjen är en linje och måste skrivas som en ekvation, t.ex. x = 2.")
+            elif status == 'format_saknar_y':
+                st.warning("⚠️ Räta linjens ekvation måste börja med y =, t.ex. y = 2x - 3.")
+            elif status == 'ej_forenklad':
+                st.warning("⚠️ Ditt uttryck är matematiskt lika men inte färdigutvecklat eller förkortat. Utveckla parenteser och förkorta så långt som möjligt.")
             elif status == 'format':
                 st.warning("⚠️ Felaktigt format på svaret.")
             elif status == 'tom':
                 st.warning("⚠️ Fyll i ett svar innan du rättar.")
-
-            elif status == 'format_saknar_x':
-                st.warning("⚠️ Symmetrilinjen är en linje och måste skrivas som en ekvation, t.ex. x = 2.")
                 
             if st.button("Hoppa över / Nästa uppgift", use_container_width=True, key=f"skip_{uid}"):
                 generera_ny_uppgift()
