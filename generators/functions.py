@@ -1,9 +1,3 @@
-import random
-import numpy as np
-import plotly.graph_objects as go
-from models import Uppgift
-from utils import formatera_polynom
-
 def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
     """Andragradsfunktioner, vertex och symmetrilinje."""
     a = random.choice([-1, 1])
@@ -13,7 +7,8 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
     x_vals = np.linspace(h - 5, h + 5, 200)
     y_vals = a * (x_vals - h)**2 + k
     
-    typ = random.choice(['symmetrilinje', 'extrempunkt_typ'])
+    # 75 % chans för symmetrilinje, 25 % chans för max/min
+    typ = random.choices(['symmetrilinje', 'extrempunkt_typ'], weights=[0.75, 0.25], k=1)[0]
     
     fig = go.Figure()
     fig.add_trace(go.Scatter(
@@ -61,40 +56,4 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
             alternativ=alts,
             input_typ="radio",
             svarstyp="string"
-        )
-
-def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
-    """Exponential- och potensfunktioner."""
-    typ = random.choice(['exp_modell', 'potens_ekv'])
-    
-    if typ == 'exp_modell':
-        start = random.choice([1000, 2000, 5000, 10000])
-        procent = random.choice([3, 5, 8, 12])
-        ar = random.randint(2, 5)
-        ff = 1 + (procent / 100.0)
-        svar = round(start * (ff ** ar), 2)
-        
-        info = f"Ett belopp på {start} kr sätts in på ett konto med en årlig ränta på {procent} %."
-        return Uppgift(
-            info_box_text=info,
-            info_box_style="blue",
-            fraga=f"Hur mycket pengar finns på kontot efter {ar} år?",
-            ratt_svar=svar,
-            input_typ="text",
-            svarstyp="float",
-            suffix="kr",
-            undertext="Avrunda till två decimaler."
-        )
-    else:
-        x_val = random.randint(2, 6)
-        n = random.choice([3, 4])
-        rhs = x_val ** n
-        
-        return Uppgift(
-            info_text="Lös potenssambandet:",
-            latex_text=f"x^{n} = {rhs}",
-            fraga="Bestäm det positiva värdet på x:",
-            ratt_svar=x_val,
-            input_typ="text",
-            svarstyp="int"
         )
