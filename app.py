@@ -138,6 +138,9 @@ with col_h:
                 st.warning("⚠️ Felaktigt format på svaret.")
             elif status == 'tom':
                 st.warning("⚠️ Fyll i ett svar innan du rättar.")
+
+            elif status == 'format_saknar_x':
+                st.warning("⚠️ Symmetrilinjen är en linje och måste skrivas som en ekvation, t.ex. x = 2.")
                 
             if st.button("Hoppa över / Nästa uppgift", use_container_width=True, key=f"skip_{uid}"):
                 generera_ny_uppgift()
