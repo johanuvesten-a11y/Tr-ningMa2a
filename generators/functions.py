@@ -5,312 +5,263 @@ from models import Uppgift
 from utils import formatera_polynom
 
 def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
-    """Räta linjens ekvation y = kx + m (grafiskt och algebraiskt)."""
+    """Räta linjens ekvation y = kx + m."""
     if niva == 1:
         k = random.choice([-3, -2, -1, 1, 2, 3])
         m = random.randint(-4, 4)
-        
-        x_vals = np.linspace(-6, 6, 200)
+        x_vals = np.linspace(-5, 5, 100)
         y_vals = k * x_vals + m
-        
+
         fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=x_vals, y=y_vals, mode='lines',
-            line=dict(color='#0056b3', width=3), hoverinfo='skip'
-        ))
+        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
         fig.update_layout(
-            xaxis=dict(title="x", range=[-6, 6], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+            xaxis=dict(title="x", range=[-5, 5], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
             yaxis=dict(title="y", range=[-6, 6], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
-            height=360, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
+            height=340, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
         )
-        
-        facit = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
         return Uppgift(
-            info_text="Studera den räta linjen i koordinatsystemet:",
+            info_text="Bestäm ekvationen för den räta linjen i diagrammet:",
             plotly_fig=fig,
-            fraga="Bestäm linjens ekvation på formen y = kx + m:",
-            ratt_svar=facit,
+            fraga="Skriv linjens ekvation på formen y = kx + m:",
+            ratt_svar=f"y={k}x+{m}",
             input_typ="text",
             svarstyp="ekvation_linje",
-            undertext="Avläs m-värdet (skärningen med y-axeln) och lutningen k (Δy / Δx)."
+            undertext="Bestäm linjens lutning (k) och skärning med y-axeln (m) ur grafen."
         )
     else:
-        typ = random.choices(['tva_punkter', 'parallell'], weights=[0.7, 0.3], k=1)[0]
-        k = random.choice([-3, -2, -1, 1, 2, 3])
-        m = random.randint(-6, 6)
-        x1 = random.randint(-4, 1)
-        x2 = x1 + random.randint(2, 4)
-        y1 = k * x1 + m
-        y2 = k * x2 + m
-        
+        typ = random.choice(['tva_punkter', 'parallell'])
         if typ == 'tva_punkter':
-            facit = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
+            k = random.choice([-4, -3, -2, -1, 2, 3, 4])
+            m = random.randint(-6, 6)
+            x1 = random.randint(-3, 2)
+            x2 = x1 + random.randint(2, 4)
+            y1, y2 = k * x1 + m, k * x2 + m
             return Uppgift(
-                info_box_text=f"En rät linje går genom punkterna A({x1}, {y1}) och B({x2}, {y2}).",
+                info_box_text=f"En rät linje går genom punkterna ({x1}, {y1}) och ({x2}, {y2}).",
                 info_box_style="blue",
                 fraga="Bestäm linjens ekvation på formen y = kx + m:",
-                ratt_svar=facit,
+                ratt_svar=f"y={k}x+{m}",
                 input_typ="text",
                 svarstyp="ekvation_linje",
-                undertext="Beräkna först lutningen k = (y₂ - y₁) / (x₂ - x₁) och bestäm sedan m."
+                undertext="Bestäm först riktningskoefficienten k och därefter m-värdet."
             )
         else:
-            ar_parallell = random.choice([True, False])
-            k_given = k if ar_parallell else random.choice([v for v in [-3, -2, -1, 1, 2, 3] if v != k])
-            m_given = m + random.choice([-4, -2, 2, 4])
-            linje_str = f"y = {formatera_polynom([(k_given, 'x'), (m_given, '')])}"
+            k = random.choice([-3, -2, 2, 3, 4])
+            m1 = random.randint(-5, 5)
+            m2 = random.choice([x for x in range(-6, 7) if x != m1])
+            px = random.randint(-3, 3)
+            py = k * px + m2
+            linje1_str = f"y = {formatera_polynom([(k, 'x'), (m1, '')])}"
             return Uppgift(
-                info_box_text=f"Linje L₁ har ekvationen {linje_str}.<br>Linje L₂ går genom punkterna ({x1}, {y1}) och ({x2}, {y2}).",
+                info_box_text=f"En rät linje L är parallell med linjen {linje1_str} och går genom punkten ({px}, {py}).",
                 info_box_style="blue",
-                fraga="Är linjerna L₁ och L₂ parallella?",
-                ratt_svar="Ja" if ar_parallell else "Nej",
-                alternativ=["Ja", "Nej"],
-                input_typ="radio",
-                svarstyp="string",
-                undertext="Två linjer är parallella om de har samma riktningskoefficient (k-värde)."
+                fraga="Bestäm ekvationen för linjen L på formen y = kx + m:",
+                ratt_svar=f"y={k}x+{m2}",
+                input_typ="text",
+                svarstyp="ekvation_linje",
+                undertext="Jämför linjernas lutning."
             )
 
 def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
-    """Andragradsfunktioner, vertex, symmetrilinje och extremvärde."""
+    """Andragradsfunktioner, nollställen, symmetrilinje och extremvärde."""
     if niva == 1:
-        typ = random.choices(
-            ['symmetrilinje_graf', 'symmetrilinje_nollstallen', 'extrempunkt_typ', 'avlas_c'],
-            weights=[0.50, 0.20, 0.15, 0.15],
-            k=1
-        )[0]
+        r1 = random.randint(-4, 2)
+        r2 = r1 + random.choice([2, 4, 6])
+        a = random.choice([1, -1])
+        sym = (r1 + r2) // 2
+        b = -a * (r1 + r2)
+        c = a * r1 * r2
         
+        typ = random.choice(['symmetrilinje_nollstallen', 'avlas_c', 'symmetrilinje_graf'])
         if typ == 'symmetrilinje_nollstallen':
-            h = random.randint(-4, 4)
-            avstand = random.randint(2, 6)
-            x1 = h - avstand
-            x2 = h + avstand
+            funk_str = f"f(x) = {formatera_polynom([(a, 'x^2'), (b, 'x'), (c, '')])}"
             return Uppgift(
-                info_box_text=f"En andragradsfunktion har nollställena x₁ = {x1} och x₂ = {x2}.",
-                info_box_style="green",
-                fraga="Ange symmetrilinjens ekvation:",
-                ratt_svar=f"x = {h}",
+                info_box_text=f"Andragradsfunktionen {funk_str} har nollställena x₁ = {r1} och x₂ = {r2}.",
+                info_box_style="blue",
+                fraga="Ange ekvationen för funktionens symmetrilinje:",
+                ratt_svar=f"x={sym}",
                 input_typ="text",
                 svarstyp="ekvation_x",
-                undertext="Symmetrilinjen ligger mitt emellan nollställena. Skriv svaret som en ekvation (t.ex. x = 2)."
+                undertext="Utnyttja parabelns symmetri. Skriv svaret som en ekvation (t.ex. x = 2)."
             )
+        elif typ == 'avlas_c':
+            x_vals = np.linspace(sym - 4, sym + 4, 200)
+            y_vals = a * x_vals**2 + b * x_vals + c
+            y_min = min(-4, int(np.min(y_vals)) - 1)
+            y_max = max(4, int(np.max(y_vals)) + 1)
             
-        a = random.choice([-1, 1])
-        h = random.randint(-3, 3)
-        k = random.randint(-4, 4)
-        c = a * (h ** 2) + k
+            if abs(c) <= 10 and (y_max - y_min) <= 18:
+                fig = go.Figure()
+                fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
+                fig.update_layout(
+                    xaxis=dict(title="x", range=[sym - 4, sym + 4], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+                    yaxis=dict(title="y", range=[y_min, y_max], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+                    height=350, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
+                )
+                return Uppgift(
+                    info_text="Bilden visar grafen till en andragradsfunktion på formen f(x) = ax² + bx + c:",
+                    plotly_fig=fig,
+                    fraga="Bestäm värdet på konstanten c:",
+                    ratt_svar=c,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Fundera på vad f(0) blir."
+                )
         
-        if typ == 'avlas_c':
-            while abs(c) > 6:
-                h = random.randint(-2, 2)
-                k = random.randint(-4, 4)
-                c = a * (h ** 2) + k
-            x_min = min(-2, h - 4)
-            x_max = max(2, h + 4)
-            y_min = min(k - 2, c - 2, -1)
-            y_max = max(k + 2, c + 2, 1)
-            
-            x_vals = np.linspace(x_min - 1, x_max + 1, 300)
-            y_vals = a * (x_vals - h)**2 + k
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='blue', width=3), hoverinfo='skip'))
-            fig.update_layout(
-                xaxis=dict(title="x", range=[x_min, x_max], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
-                yaxis=dict(title="y", range=[y_min, y_max], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
-                height=350, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
-            )
-            return Uppgift(
-                info_text="Grafen visar andragradsfunktionen f(x) = ax² + bx + c:",
-                plotly_fig=fig,
-                fraga="Bestäm värdet på konstanten c med hjälp av grafen:",
-                ratt_svar=c,
-                input_typ="text",
-                svarstyp="int",
-                undertext="Konstanten c motsvarar funktionens skärning med y-axeln (där x = 0)."
-            )
-            
-        # Förskjut visningsfönstret i sidled så att symmetrilinjen inte hamnar i mitten
-        left_span = random.choice([2, 3, 4, 6, 7, 8])
-        right_span = 10 - left_span
-        x_min = h - left_span
-        x_max = h + right_span
-        if a > 0:
-            y_min = min(k - 2, -1)
-            y_max = y_min + 10
-        else:
-            y_max = max(k + 2, 1)
-            y_min = y_max - 10
-            
-        x_vals = np.linspace(x_min - 1, x_max + 1, 300)
-        y_vals = a * (x_vals - h)**2 + k
+        x_vals = np.linspace(sym - 4, sym + 4, 200)
+        y_vals = a * x_vals**2 + b * x_vals + c
         fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='blue', width=3), hoverinfo='skip'))
-        
-        if typ == 'extrempunkt_typ':
-            fig.add_trace(go.Scatter(x=[h], y=[k], mode='markers', marker=dict(size=10, color='red'), hoverinfo='skip'))
-            
+        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
         fig.update_layout(
-            xaxis=dict(title="x", range=[x_min, x_max], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
-            yaxis=dict(title="y", range=[y_min, y_max], dtick=2, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+            xaxis=dict(title="x", range=[sym - 4, sym + 4], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+            yaxis=dict(title="y", dtick=2, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
             height=350, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
         )
-        
-        if typ == 'symmetrilinje_graf':
-            return Uppgift(
-                info_text="Studera andragradsfunktionen i grafen:",
-                plotly_fig=fig,
-                fraga="Ange symmetrilinjens ekvation:",
-                ratt_svar=f"x = {h}",
-                input_typ="text",
-                svarstyp="ekvation_x",
-                undertext="Skriv svaret som en ekvation (t.ex. x = 2)."
-            )
-        else:
-            svar_typ = "Minimipunkt" if a > 0 else "Maximipunkt"
-            return Uppgift(
-                info_text=f"Funktionen f(x) har sin extrempunkt i ({h}, {k}).",
-                plotly_fig=fig,
-                fraga="Har parabeln en maximipunkt eller minimipunkt?",
-                ratt_svar=svar_typ,
-                alternativ=["Minimipunkt", "Maximipunkt"],
-                input_typ="radio",
-                svarstyp="string"
-            )
+        return Uppgift(
+            info_text="Studera andragradskurvan nedan:",
+            plotly_fig=fig,
+            fraga="Ange ekvationen för kurvans symmetrilinje:",
+            ratt_svar=f"x={sym}",
+            input_typ="text",
+            svarstyp="ekvation_x",
+            undertext="Skriv svaret som en ekvation (t.ex. x = 2)."
+        )
     else:
         typ = random.choice(['andra_nollstallet', 'extremvarde_algebraiskt'])
         if typ == 'andra_nollstallet':
-            h = random.randint(-4, 5)
-            avstand = random.randint(2, 6)
-            x1 = h - avstand if random.choice([True, False]) else h + avstand
-            x2 = 2 * h - x1
+            sym = random.randint(-3, 4)
+            avstand = random.randint(2, 5)
+            r1 = sym - avstand
+            r2 = sym + avstand
+            if random.choice([True, False]):
+                r1, r2 = r2, r1
             return Uppgift(
-                info_box_text=f"En andragradsfunktion har symmetrilinjen x = {h}.<br>Ett av funktionens nollställen är x₁ = {x1}.",
-                info_box_style="green",
-                fraga="Bestäm funktionens andra nollställe x₂:",
-                ratt_svar=x2,
+                info_box_text=f"En andragradsfunktion har symmetrilinjen x = {sym}. Ett av funktionens nollställen är x = {r1}.",
+                info_box_style="blue",
+                fraga="Bestäm funktionens andra nollställe:",
+                ratt_svar=r2,
                 input_typ="text",
                 svarstyp="int",
-                undertext="Nollställena ligger lika långt från symmetrilinjen på varsin sida."
+                undertext="Utnyttja parabelns symmetri kring symmetrilinjen."
             )
         else:
-            a = random.choice([-1, 1])
-            h = random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
-            k = random.randint(-6, 6)
-            b = -2 * a * h
-            c = a * (h ** 2) + k
-            uttryck = formatera_polynom([(a, 'x^2'), (b, 'x'), (c, '')])
-            ord_typ = "minsta" if a > 0 else "största"
+            a = random.choice([1, -1])
+            sym = random.randint(-4, 4)
+            p = -2 * sym
+            q = random.randint(-6, 6)
+            funk_str = f"f(x) = {formatera_polynom([(a, 'x^2'), (a*p, 'x'), (q, '')])}"
+            extrem_y = a * (sym**2) + a * p * sym + q
+            typ_ord = "minimivärde" if a > 0 else "maximivärde"
             return Uppgift(
-                info_text="En andragradsfunktion ges av:",
-                latex_text=f"f(x) = {uttryck}",
-                fraga=f"Beräkna funktionens {ord_typ} värde algebraiskt:",
-                ratt_svar=k,
+                info_box_text=f"Givet andragradsfunktionen {funk_str}.",
+                info_box_style="blue",
+                fraga=f"Beräkna funktionens {typ_ord} (y-värdet i extrempunkten):",
+                ratt_svar=extrem_y,
                 input_typ="text",
                 svarstyp="int",
-                undertext="Bestäm först symmetrilinjen x = -p/2 och sätt sedan in x-värdet i f(x)."
+                undertext="Börja med att bestämma funktionens symmetrilinje."
             )
 
 def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
-    """Exponential- och potensfunktioner."""
+    """Exponentialfunktioner och potensekvationer."""
     if niva == 1:
-        typ = random.choice(['exp_modell', 'tolka_procent', 'potens_ekv'])
+        typ = random.choice(['exp_modell', 'tolka_procent'])
         if typ == 'exp_modell':
-            start = random.choice([1000, 2000, 5000, 10000])
-            procent = random.choice([3, 5, 8, 12])
-            ar = random.randint(2, 5)
-            ff = 1 + (procent / 100.0)
-            svar = round(start * (ff ** ar), 2)
-            info = f"Ett belopp på {start} kr sätts in på ett konto med en årlig ränta på {procent} %."
+            start = random.choice([15000, 20000, 25000, 40000, 50000])
+            p_var = random.choice([4, 5, 6, 8, 12])
+            ar = random.randint(3, 6)
+            typ_forandring = random.choice(['okar', 'minskar'])
+            if typ_forandring == 'okar':
+                ff = 1 + p_var / 100
+                text = f"En population på {start} individer ökar med {p_var} % per år."
+            else:
+                ff = 1 - p_var / 100
+                text = f"Värdet på en maskin som kostar {start} kr minskar med {p_var} % per år."
+            ratt_svar = round(start * (ff ** ar), 2)
             return Uppgift(
-                info_box_text=info,
+                info_box_text=text,
                 info_box_style="blue",
-                fraga=f"Hur mycket pengar finns på kontot efter {ar} år?",
-                ratt_svar=svar,
+                fraga=f"Beräkna värdet efter {ar} år:",
+                ratt_svar=ratt_svar,
                 input_typ="text",
                 svarstyp="float",
-                suffix="kr",
+                tolerans=1.0,
                 undertext="Avrunda till två decimaler."
             )
-        elif typ == 'tolka_procent':
-            start = random.choice([15000, 25000, 40000, 80000])
-            ar_minskning = random.choice([True, False])
-            procent = random.choice([4, 6, 8, 12, 15, 18])
-            ff = round(1 - procent / 100.0, 2) if ar_minskning else round(1 + procent / 100.0, 2)
-            ff_str = f"{ff:g}".replace('.', ',')
-            ord_str = "minskar" if ar_minskning else "ökar"
-            return Uppgift(
-                info_text="Värdet y (i kr) på ett föremål efter x år beskrivs av modellen:",
-                latex_text=f"y = {start} \\cdot {ff_str}^x",
-                fraga=f"Med hur många procent {ord_str} värdet per år?",
-                ratt_svar=procent,
-                input_typ="text",
-                svarstyp="procent",
-                suffix="%",
-                undertext="Jämför förändringsfaktorn med 1 (100 %)."
-            )
         else:
-            n = random.choice([2, 3, 4])
-            x_val = random.randint(2, 8) if n == 2 else random.randint(2, 5)
-            rhs = x_val ** n
-            fraga_txt = "Bestäm det positiva värdet på x:" if n % 2 == 0 else "Lös ekvationen:"
+            start = random.choice([1200, 2500, 8000, 15000])
+            procent = random.choice([3, 4, 7, 12, 15])
+            okar = random.choice([True, False])
+            if okar:
+                ff = round(1 + procent / 100, 2)
+                ratt = f"Ökar med {procent} % per år"
+            else:
+                ff = round(1 - procent / 100, 2)
+                ratt = f"Minskar med {procent} % per år"
+                
+            alts = [
+                f"Ökar med {procent} % per år",
+                f"Minskar med {procent} % per år",
+                f"Ökar med {int(round(ff * 100))} % per år",
+                f"Minskar med {int(round(ff * 100))} % per år"
+            ]
+            random.shuffle(alts)
             return Uppgift(
-                info_text="Lös potensekvationen:",
-                latex_text=f"x^{n} = {rhs}",
-                fraga=fraga_txt,
-                ratt_svar=x_val,
-                input_typ="text",
-                svarstyp="int"
+                info_box_text=f"Värdet y (i kr) på en aktieportfölj efter x år beskrivs av modellen y = {start} · {ff}ˣ.",
+                info_box_style="blue",
+                fraga="Hur förändras portföljens värde varje år?",
+                ratt_svar=ratt,
+                alternativ=alts,
+                input_typ="radio",
+                svarstyp="string",
+                undertext="Studera förändringsfaktorn i modellen."
             )
     else:
-        typ = random.choice(['baklanges_startvarde', 'potens_koeff', 'potens_brak_exp'])
+        typ = random.choice(['potens_koeff', 'potens_brak_exp', 'baklanges_startvarde'])
         if typ == 'baklanges_startvarde':
-            ar_minskning = random.choice([True, False])
-            procent = random.choice([10, 20])
-            ar = random.choice([2, 3])
-            start = random.choice([10000, 20000, 30000])
-            ff = round(1 - procent / 100.0, 2) if ar_minskning else round(1 + procent / 100.0, 2)
-            slutvarde = int(round(start * (ff ** ar)))
-            ord_str = "minskat" if ar_minskning else "ökat"
+            start = random.choice([2000, 4000, 5000, 8000, 10000])
+            p_var = random.choice([5, 10, 20])
+            ar = random.randint(2, 4)
+            okar = random.choice([True, False])
+            ff = (1 + p_var / 100) if okar else (1 - p_var / 100)
+            slut = round(start * (ff ** ar), 2)
+            verb = "ökat" if okar else "minskat"
             return Uppgift(
-                info_box_text=f"Värdet på en maskin har {ord_str} med {procent} % per år i {ar} år och är nu {slutvarde} kr.",
+                info_box_text=f"Värdet på en fond har {verb} med {p_var} % per år i {ar} år. Idag är fonden värd {slut} kr.",
                 info_box_style="blue",
-                fraga="Beräkna maskinens ursprungliga värde:",
-                ratt_svar=start,
+                fraga="Hur mycket var fonden värd från början (för " + str(ar) + " år sedan)?",
+                ratt_svar=float(start),
                 input_typ="text",
-                svarstyp="int",
+                svarstyp="float",
+                tolerans=1.0,
                 suffix="kr",
-                undertext="Ställ upp ekvationen C · aˣ = slutvärde och lös ut startvärdet C."
+                undertext="Ställ upp en ekvation med hjälp av förändringsfaktorn."
             )
         elif typ == 'potens_koeff':
             a = random.choice([2, 3, 4, 5])
-            n = random.choice([2, 3, 4])
-            x_val = random.randint(2, 6) if n == 2 else random.randint(2, 4)
-            rhs = a * (x_val ** n)
-            fraga_txt = "Bestäm det positiva värdet på x:" if n % 2 == 0 else "Lös ekvationen:"
+            exp = random.choice([3, 4])
+            x_sol = random.randint(2, 5)
+            hl = a * (x_sol ** exp)
             return Uppgift(
                 info_text="Lös potensekvationen:",
-                latex_text=f"{a}x^{n} = {rhs}",
-                fraga=fraga_txt,
-                ratt_svar=x_val,
+                latex_text=f"{a}x^{{{exp}}} = {hl}",
+                fraga="Ange det positiva värdet på x:",
+                ratt_svar=x_sol,
                 input_typ="text",
                 svarstyp="int",
-                undertext=f"Dividera först båda leden med {a}."
+                undertext="Isolera potensen innan du löser ekvationen."
             )
         else:
-            rot_typ = random.choice([2, 3])
-            if rot_typ == 2:
-                k = random.randint(3, 9)
-                ratt = k ** 2
-                exp_latex = "x^{1/2}"
-            else:
-                k = random.randint(2, 5)
-                ratt = k ** 3
-                exp_latex = "x^{1/3}"
+            namnare = random.choice([2, 3])
+            bas = random.randint(2, 5)
+            hl = bas
+            x_sol = bas ** namnare
             return Uppgift(
                 info_text="Lös potensekvationen:",
-                latex_text=f"{exp_latex} = {k}",
-                fraga="Bestäm värdet på x:",
-                ratt_svar=ratt,
+                latex_text=f"x^{{1/{namnare}}} = {hl}",
+                fraga="Ange värdet på x:",
+                ratt_svar=x_sol,
                 input_typ="text",
                 svarstyp="int",
-                undertext=f"Upphöj båda leden till {rot_typ}."
+                undertext="Använd potenslagarna för att få x ensamt."
             )
