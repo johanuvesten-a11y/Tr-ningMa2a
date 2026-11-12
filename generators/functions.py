@@ -10,32 +10,45 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
     h = random.randint(-4, 4)  # Symmetrilinje x = h
     k = random.randint(-5, 5)  # Extremvärde y = k
     
-    # f(x) = a(x-h)^2 + k
-    # Grafisk Plotly-visualisering
     x_vals = np.linspace(h - 5, h + 5, 200)
     y_vals = a * (x_vals - h)**2 + k
     
+    typ = random.choice(['symmetrilinje', 'extrempunkt_typ'])
+    
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='blue', width=3)))
-    fig.add_vline(x=h, line_dash="dash", line_color="red", annotation_text=f"x = {h}")
-    fig.add_trace(go.Scatter(x=[h], y=[k], mode='markers', marker=dict(size=10, color='red')))
+    fig.add_trace(go.Scatter(
+        x=x_vals, y=y_vals, mode='lines',
+        line=dict(color='blue', width=3), hoverinfo='skip'
+    ))
+    
+    if typ == 'extrempunkt_typ':
+        fig.add_trace(go.Scatter(
+            x=[h], y=[k], mode='markers',
+            marker=dict(size=10, color='red'), hoverinfo='skip'
+        ))
+        
     fig.update_layout(
-        xaxis_title="x", yaxis_title="y",
+        xaxis=dict(
+            title="x", dtick=1, zeroline=True, zerolinewidth=2,
+            zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'
+        ),
+        yaxis=dict(
+            title="y", dtick=2, zeroline=True, zerolinewidth=2,
+            zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'
+        ),
         height=350, margin=dict(l=20, r=20, t=20, b=20),
-        plot_bgcolor='white', showlegend=False
+        plot_bgcolor='white', showlegend=False, hovermode=False
     )
     
-    typ = random.choice(['symmetrilinje', 'extrempunkt_typ'])
     if typ == 'symmetrilinje':
         return Uppgift(
             info_text="Studera andragradsfunktionen i grafen:",
             plotly_fig=fig,
-            fraga="Vilken är funktionens symmetrilinje?",
-            ratt_svar=h,
+            fraga="Ange symmetrilinjens ekvation:",
+            ratt_svar=f"x = {h}",
             input_typ="text",
-            svarstyp="int",
-            suffix="",
-            undertext="Svara med x-värdet för symmetrilinjen (ett heltal)."
+            svarstyp="ekvation_x",
+            undertext="Skriv svaret som en ekvation (t.ex. x = 2)."
         )
     else:
         svar_typ = "Minimipunkt" if a > 0 else "Maximipunkt"
@@ -49,7 +62,6 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
             input_typ="radio",
             svarstyp="string"
         )
-
 def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
     """Exponential- och potensfunktioner."""
     typ = random.choice(['exp_modell', 'potens_ekv'])
