@@ -245,4 +245,203 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
             r2 = random.choice([x for x in range(-6, 7) if x != r1])
             p = -(r1 + r2)
             q = r1 * r2
-            ekv_str = f"{formatera_polynom([(1, 'x^2'), (p, 'x
+            ekv_str = f"{formatera_polynom([(1, 'x^2'), (p, 'x'), (q, '')])} = 0"
+            ratt_svar = sorted([float(r1), float(r2)])
+            tips = None
+            
+        return Uppgift(
+            info_text="Lös andragradsekvationen:",
+            latex_text=ekv_str,
+            fraga="Ange ekvationens två lösningar:",
+            ratt_svar=ratt_svar,
+            input_typ="flera_text",
+            svarstyp="array_float",
+            flera_labels=["x₁ =", "x₂ ="],
+            undertext=tips
+        )
+    else:
+        typ = random.choice(['koefficient_a', 'omskriv_parentes', 'omskriv_kvadrat', 'dubbelrot'])
+        if typ == 'koefficient_a':
+            a = random.choice([2, 3, 4])
+            r1 = random.randint(-4, 3)
+            r2 = random.choice([x for x in range(-4, 5) if x != r1])
+            p = -(r1 + r2)
+            q = r1 * r2
+            ekv_str = f"{formatera_polynom([(a, 'x^2'), (a*p, 'x'), (a*q, '')])} = 0"
+            ratt_svar = sorted([float(r1), float(r2)])
+            return Uppgift(
+                info_text="Lös ekvationen algebraiskt:",
+                latex_text=ekv_str,
+                fraga="Ange ekvationens två lösningar:",
+                ratt_svar=ratt_svar,
+                input_typ="flera_text",
+                svarstyp="array_float",
+                flera_labels=["x₁ =", "x₂ ="],
+                undertext="Se till att x²-termen har koefficienten 1 innan du använder PQ-formeln."
+            )
+        elif typ == 'omskriv_parentes':
+            r1 = random.choice([x for x in range(-5, 5) if x != 0])
+            r2 = random.choice([x for x in range(-5, 6) if x != r1 and (r1 + x) != 0 and (r1 * x) != 0])
+            p = -(r1 + r2)
+            q = r1 * r2
+            parentes = formatera_polynom([(1, 'x'), (p, '')])
+            ekv_str = f"x({parentes}) = {-q}"
+            ratt_svar = sorted([float(r1), float(r2)])
+            return Uppgift(
+                info_text="Lös ekvationen algebraiskt:",
+                latex_text=ekv_str,
+                fraga="Ange ekvationens två lösningar:",
+                ratt_svar=ratt_svar,
+                input_typ="flera_text",
+                svarstyp="array_float",
+                flera_labels=["x₁ =", "x₂ ="],
+                undertext="Skriv om ekvationen på standardform innan du löser den."
+            )
+        elif typ == 'omskriv_kvadrat':
+            a = random.choice([-4, -3, -2, 2, 3, 4])
+            r = random.randint(2, 5)
+            hl = formatera_polynom([(2*a, 'x'), (a**2 + r**2, '')])
+            vl = f"(x + {a})^2" if a > 0 else f"(x - {abs(a)})^2"
+            ekv_str = f"{vl} = {hl}"
+            ratt_svar = sorted([float(-r), float(r)])
+            return Uppgift(
+                info_text="Lös ekvationen algebraiskt:",
+                latex_text=ekv_str,
+                fraga="Ange ekvationens två lösningar:",
+                ratt_svar=ratt_svar,
+                input_typ="flera_text",
+                svarstyp="array_float",
+                flera_labels=["x₁ =", "x₂ ="],
+                undertext="Förenkla vänsterledet och samla alla termer."
+            )
+        else:
+            r = random.choice([-5, -4, -3, -2, 2, 3, 4, 5])
+            p = -2 * r
+            q = r ** 2
+            ekv_str = f"{formatera_polynom([(1, 'x^2'), (p, 'x'), (q, '')])} = 0"
+            return Uppgift(
+                info_text="Lös andragradsekvationen:",
+                latex_text=ekv_str,
+                fraga="Ekvationen har endast en lösning (dubbelrot). Ange lösningen:",
+                ratt_svar=r,
+                input_typ="text",
+                svarstyp="int"
+            )
+
+def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
+    """Linjära ekvationssystem (grafiskt och algebraiskt)."""
+    if niva == 1:
+        typ = random.choice(['grafisk', 'substitution'])
+        x_sol = random.randint(-3, 4)
+        y_sol = random.randint(-3, 4)
+        
+        if typ == 'grafisk':
+            k1 = random.choice([-2, -1, 1, 2])
+            k2 = random.choice([k for k in [-2, -1, 1, 2, 3] if k != k1])
+            m1 = y_sol - k1 * x_sol
+            m2 = y_sol - k2 * x_sol
+            
+            while abs(m1) > 6 or abs(m2) > 6:
+                x_sol = random.randint(-2, 3)
+                y_sol = random.randint(-2, 3)
+                m1 = y_sol - k1 * x_sol
+                m2 = y_sol - k2 * x_sol
+                
+            x_vals = np.linspace(-6, 6, 100)
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=x_vals, y=k1*x_vals + m1, mode='lines', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
+            fig.add_trace(go.Scatter(x=x_vals, y=k2*x_vals + m2, mode='lines', line=dict(color='#d9534f', width=3), hoverinfo='skip'))
+            fig.update_layout(
+                xaxis=dict(title="x", range=[-6, 6], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+                yaxis=dict(title="y", range=[-6, 6], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+                height=360, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
+            )
+            
+            ekv1_str = f"y = {formatera_polynom([(k1, 'x'), (m1, '')])}"
+            ekv2_str = f"y = {formatera_polynom([(k2, 'x'), (m2, '')])}"
+            return Uppgift(
+                info_text="Lös ekvationssystemet grafiskt med hjälp av figuren:",
+                latex_text=f"\\begin{{cases}} {ekv1_str} \\\\ {ekv2_str} \\end{{cases}}",
+                plotly_fig=fig,
+                fraga="Avläs skärningspunktens koordinater (x och y):",
+                ratt_svar=[float(x_sol), float(y_sol)],
+                input_typ="flera_text",
+                svarstyp="ekvationssystem",
+                flera_labels=["x =", "y ="],
+                undertext="Hitta linjernas skärningspunkt i koordinatsystemet."
+            )
+        else:
+            k = random.choice([-2, -1, 2, 3])
+            m = y_sol - k * x_sol
+            a = random.choice([2, 3, 4])
+            b = random.choice([1, 2])
+            c = a * x_sol + b * y_sol
+            
+            ekv1 = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
+            ekv2 = f"{formatera_polynom([(a, 'x'), (b, 'y')])} = {c}"
+            return Uppgift(
+                info_text="Lös ekvationssystemet algebraiskt:",
+                latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
+                fraga="Ange lösningen (x och y):",
+                ratt_svar=[float(x_sol), float(y_sol)],
+                input_typ="flera_text",
+                svarstyp="ekvationssystem",
+                flera_labels=["x =", "y ="],
+                undertext="Välj en lämplig algebraisk lösningsmetod."
+            )
+    else:
+        typ = random.choices(['forlang_bada', 'antal_losningar'], weights=[0.7, 0.3], k=1)[0]
+        if typ == 'forlang_bada':
+            x_sol = random.randint(-3, 5)
+            y_sol = random.randint(-3, 5)
+            par = random.choice([(2, 3), (3, 4), (2, 5), (3, 5)])
+            a1, a2 = random.sample(par, 2)
+            b1 = random.choice([-3, -2, 2, 3])
+            b2_kandidater = [v for v in [-4, -3, -2, 2, 3, 4] if v % b1 != 0 and b1 % v != 0 and (a1 * v - a2 * b1) != 0]
+            b2 = random.choice(b2_kandidater)
+            
+            c1 = a1 * x_sol + b1 * y_sol
+            c2 = a2 * x_sol + b2 * y_sol
+            
+            ekv1 = f"{formatera_polynom([(a1, 'x'), (b1, 'y')])} = {c1}"
+            ekv2 = f"{formatera_polynom([(a2, 'x'), (b2, 'y')])} = {c2}"
+            return Uppgift(
+                info_text="Lös ekvationssystemet algebraiskt:",
+                latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
+                fraga="Ange lösningen (x och y):",
+                ratt_svar=[float(x_sol), float(y_sol)],
+                input_typ="flera_text",
+                svarstyp="ekvationssystem",
+                flera_labels=["x =", "y ="],
+                undertext="Lös systemet med additions- eller substitutionsmetoden."
+            )
+        else:
+            k = random.choice([-3, -2, 2, 3])
+            m1 = random.randint(-4, 4)
+            fall = random.choice(['parallella', 'sammanfallande'])
+            mult = random.choice([2, 3])
+            if fall == 'parallella':
+                m2 = m1 + random.choice([-3, -2, 2, 3])
+                ekv1 = f"y = {formatera_polynom([(k, 'x'), (m1, '')])}"
+                ekv2 = f"{formatera_polynom([(-mult*k, 'x'), (mult, 'y')])} = {mult*m2}"
+                ratt = "0 lösningar (linjerna är parallella)"
+            else:
+                ekv1 = f"y = {formatera_polynom([(k, 'x'), (m1, '')])}"
+                ekv2 = f"{formatera_polynom([(-mult*k, 'x'), (mult, 'y')])} = {mult*m1}"
+                ratt = "Oändligt många lösningar (samma linje)"
+                
+            alts = [
+                "0 lösningar (linjerna är parallella)",
+                "1 lösning",
+                "Oändligt många lösningar (samma linje)"
+            ]
+            return Uppgift(
+                info_text="Undersök följande ekvationssystem:",
+                latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
+                fraga="Hur många lösningar har ekvationssystemet?",
+                ratt_svar=ratt,
+                alternativ=alts,
+                input_typ="radio",
+                svarstyp="string",
+                undertext="Undersök linjernas lutning och skärning med y-axeln."
+            )
