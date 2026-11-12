@@ -62,6 +62,7 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
             input_typ="radio",
             svarstyp="string"
         )
+
 def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
     """Exponential- och potensfunktioner."""
     typ = random.choice(['exp_modell', 'potens_ekv'])
