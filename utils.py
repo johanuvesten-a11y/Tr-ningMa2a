@@ -22,7 +22,7 @@ def formatera_polynom(termer):
             res += f" - {term_str}" if koeff < 0 else f" + {term_str}"
     return res if res != "" else "0"
 
-def ratta_svar(u: Uppgift, input_svar: Any) -> str:
+def ratta_svar(u: Uppgift, input_svar) -> str:
     """Rättningslogik för alla uppgiftstyper."""
     if u.input_typ == 'flera_text':
         if all(str(s).strip() != "" for s in input_svar):
@@ -30,7 +30,6 @@ def ratta_svar(u: Uppgift, input_svar: Any) -> str:
                 anv_svar = [round(float(str(s).strip().replace(',', '.')), 4) for s in input_svar]
                 ratt_svar_list = [round(float(x), 4) for x in u.ratt_svar]
                 
-                # Om svarstyp är 'ekvationssystem' krävs exakt ordning (x först, y sedan)
                 if u.svarstyp == 'ekvationssystem':
                     return 'ratt' if anv_svar == ratt_svar_list else 'fel'
                 else:
@@ -43,8 +42,17 @@ def ratta_svar(u: Uppgift, input_svar: Any) -> str:
         svar_str = str(input_svar).strip()
         if not svar_str:
             return 'tom'
+            
+        try:
+            if u.svarstyp == 'int':
+                svar_clean = svar_str.replace(" ", "").replace("\xa0", "")
+                return 'ratt' if int(svar_clean) == int(u.ratt_svar) else 'fel'
+                
+            elif u.svarstyp in ['float', 'procent']:
+                svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("\xa0", "").replace("%", "")
+                return 'ratt' if abs(float(svar_clean) - float(u.ratt_svar)) < 0.01 else 'fel'
 
-    elif u.svarstyp == 'ekvation_x':
+            elif u.svarstyp == 'ekvation_x':
                 svar_clean = svar_str.replace(" ", "").replace("\xa0", "").replace(",", ".").lower()
                 if not svar_clean.startswith("x="):
                     return 'format_saknar_x'
@@ -54,18 +62,9 @@ def ratta_svar(u: Uppgift, input_svar: Any) -> str:
                     return 'ratt' if abs(elev_val - facit_val) < 0.001 else 'fel'
                 except ValueError:
                     return 'format'
-        
-        try:
-            if u.svarstyp == 'int':
-                svar_clean = svar_str.replace(" ", "").replace("\xa0", "")
-                return 'ratt' if int(svar_clean) == int(u.ratt_svar) else 'fel'
-                
-            elif u.svarstyp in ['float', 'procent']:
-                svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("%", "")
-                return 'ratt' if abs(float(svar_clean) - float(u.ratt_svar)) < 0.01 else 'fel'
                 
             elif u.svarstyp == 'string_math':
-                svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("^", "**")
+                svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("\xa0", "").replace("^", "**")
                 transformations = standard_transformations + (implicit_multiplication_application,)
                 expr_elev = parse_expr(svar_clean, transformations=transformations)
                 ratt_str = str(u.ratt_svar).replace(" ", "").replace("^", "**")
