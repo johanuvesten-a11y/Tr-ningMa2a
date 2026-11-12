@@ -27,6 +27,10 @@ input[type="text"] {
     font-weight: bold !important;
     text-align: center !important;
 }
+.katex-display {
+    padding: 0.5em 0 !important;
+    overflow-y: visible !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
