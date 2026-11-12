@@ -120,7 +120,11 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
             n_tot = random.choice([1000, 2000, 3000, 5000])
             v_high = mu + 2 * sigma
             ratt_svar = int(round(n_tot * 0.023))
-            fraga = f"I en undersökning ingår {n_tot} observationer där {sc['namn']} är normalfördelad med μ = {mu} {sc['enhet']} och σ = {sigma} {sc['enhet']}.\n\nHur många observationer förväntas ha ett värde större än {v_high} {sc['enhet']}?"
+            fraga = (
+                f"I en undersökning ingår {n_tot} observationer där {sc['namn']} är normalfördelad "
+                f"med μ = {mu} {sc['enhet']} och σ = {sigma} {sc['enhet']}. "
+                f"Hur många observationer förväntas ha ett värde större än {v_high} {sc['enhet']}?"
+            )
             sub_text = "Bestäm först hur många procent som ligger i det markerade området med hjälp av formelbladet."
             fill_range = (v_high, mu + 4 * sigma)
 
@@ -327,4 +331,9 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
             return Uppgift(
                 info_text="Jämför de två låddiagrammen:",
                 plotly_fig=fig,
-                fraga=fraga
+                fraga=fraga_val[0],
+                ratt_svar=fraga_val[1],
+                alternativ=["Grupp A", "Grupp B"],
+                input_typ="radio",
+                svarstyp="string"
+            )
