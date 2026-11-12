@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from models import Uppgift
 
 def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
-    """Normalfördelning enligt Skolverkets formelblad (34,1 %, 13,6 %, 2,3 %)."""
+    """Normalfördelning enligt Skolverkets formelblad."""
     scenarier = [
         {"namn": "längden på vuxna män", "enhet": "cm", "mu": random.choice([175, 180]), "sigma": random.choice([5, 10])},
         {"namn": "vikten på nyfödda bebisar", "enhet": "g", "mu": random.choice([3500, 3600]), "sigma": random.choice([400, 500])},
@@ -26,7 +26,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                     mu_a, mu_b = mu_b, mu_a
                 ratt = "Kurva A" if mu_a > mu_b else "Kurva B"
                 fraga = "Vilken normalfördelning har störst medelvärde (μ)?"
-                tips = "Medelvärdet μ finns vid kurvans symmetrilinje (topp)."
+                tips = "Fundera på var i kurvan medelvärdet (μ) avläses."
             else:
                 mu_a, sig_a = 50, 5
                 mu_b, sig_b = 50, 12
@@ -34,7 +34,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                     sig_a, sig_b = sig_b, sig_a
                 ratt = "Kurva A" if sig_a > sig_b else "Kurva B"
                 fraga = "Vilken normalfördelning har störst standardavvikelse (σ)?"
-                tips = "Större standardavvikelse ger en bredare och flackare kurva."
+                tips = "Standardavvikelsen (σ) är ett spridningsmått."
                 
             x_vals = np.linspace(10, 90, 400)
             y_a = (1 / (sig_a * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_vals - mu_a) / sig_a) ** 2)
@@ -64,19 +64,19 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
             v_low, v_high = mu - sigma, mu + sigma
             ratt_svar = 68.2
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
-            sub_text = "Intervallet motsvarar μ ± 1σ (34,1 % + 34,1 % enligt formelbladet)."
+            sub_text = "Avgör hur många standardavvikelser intervallet sträcker sig och ta hjälp av formelbladet."
             fill_range = (v_low, v_high)
         elif fraga_typ == 'mellersta_95':
             v_low, v_high = mu - 2 * sigma, mu + 2 * sigma
             ratt_svar = 95.4
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
-            sub_text = "Intervallet motsvarar μ ± 2σ (2 · (34,1 % + 13,6 %) enligt formelbladet)."
+            sub_text = "Avgör hur många standardavvikelser från medelvärdet intervallet omfattar och se formelbladet."
             fill_range = (v_low, v_high)
         else:
             v_high = mu + 2 * sigma
             ratt_svar = 2.3
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara större än {v_high} {sc['enhet']}?"
-            sub_text = "Använd normalfördelningskurvan på formelbladet (området ovanför μ + 2σ är 2,3 %)."
+            sub_text = "Ta hjälp av normalfördelningskurvan på formelbladet."
             fill_range = (v_high, mu + 4 * sigma)
             
     else:  # Nivå 2
@@ -95,33 +95,33 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="ordered_float",
                 flera_labels=[f"Medelvärde μ ({sc['enhet']}) =", f"Standardavvikelse σ ({sc['enhet']}) ="],
-                undertext=f"Medelvärdet ligger mitt i intervallet och {pct_str} motsvarar μ ± {typ_int}σ."
+                undertext="Utgå från normalfördelningskurvans symmetri och formelbladets procentsatser."
             )
             
         if fraga_typ == 'mellan_1_och_2_sigma':
             v_low, v_high = mu + sigma, mu + 2 * sigma
             ratt_svar = 13.6
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga i intervallet från {v_low} {sc['enhet']} till {v_high} {sc['enhet']}?"
-            sub_text = "Intervallet ligger mellan μ + 1σ och μ + 2σ (13,6 % enligt formelbladet)."
+            sub_text = "Bestäm hur många standardavvikelser från medelvärdet gränserna ligger och läs av på formelbladet."
             fill_range = (v_low, v_high)
         elif fraga_typ == 'under_plus_2sigma':
             v_high = mu + 2 * sigma
             ratt_svar = 97.7
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara MINDRE än {v_high} {sc['enhet']}?"
-            sub_text = "Addera 50 % (under μ) med 34,1 % + 13,6 % (mellan μ och μ + 2σ)."
+            sub_text = "Utnyttja att kurvan är symmetrisk kring medelvärdet μ och läs av delområdena på formelbladet."
             fill_range = (mu - 4 * sigma, v_high)
         elif fraga_typ == 'mellan_minus1_och_plus2':
             v_low, v_high = mu - sigma, mu + 2 * sigma
             ratt_svar = 81.8
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
-            sub_text = "Addera 34,1 % (mellan μ - 1σ och μ) med 34,1 % + 13,6 % (mellan μ och μ + 2σ)."
+            sub_text = "Dela upp intervallet vid medelvärdet μ och läs av delområdena på formelbladet."
             fill_range = (v_low, v_high)
         else:
             n_tot = random.choice([1000, 2000, 3000, 5000])
             v_high = mu + 2 * sigma
             ratt_svar = int(round(n_tot * 0.023))
             fraga = f"I en undersökning ingår {n_tot} observationer där {sc['namn']} är normalfördelad med μ = {mu} {sc['enhet']} och σ = {sigma} {sc['enhet']}.\n\nHur många observationer förväntas ha ett värde större än {v_high} {sc['enhet']}?"
-            sub_text = "Ovanför μ + 2σ ligger 2,3 % enligt formelbladet."
+            sub_text = "Bestäm först hur många procent som ligger i det markerade området med hjälp av formelbladet."
             fill_range = (v_high, mu + 4 * sigma)
 
     x_vals = np.linspace(mu - 4 * sigma, mu + 4 * sigma, 300)
@@ -200,7 +200,7 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 ratt_svar=q3 - q1,
                 input_typ="text",
                 svarstyp="int",
-                undertext="Kvartilavståndet beräknas som Q₃ - Q₁ (lådansas längd)."
+                undertext="Kvartilavståndet är ett spridningsmått kopplat till lådan."
             )
         elif typ == 'variationsbredd':
             return Uppgift(
@@ -210,7 +210,7 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 ratt_svar=max_v - min_v,
                 input_typ="text",
                 svarstyp="int",
-                undertext="Variationsbredden beräknas som största värdet minus minsta värdet (Max - Min)."
+                undertext="Variationsbredden anger skillnaden mellan datamaterialets yttervärden."
             )
         elif typ == 'median':
             return Uppgift(
@@ -280,7 +280,7 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 input_typ="text",
                 svarstyp="procent",
                 suffix="%",
-                undertext="Varje del i ett låddiagram motsvarar 25 % av mätvärdena."
+                undertext="Tänk på hur stor andel av mätvärdena som ryms i varje del av låddiagrammet."
             )
         else:
             med_a, iqr_a, vb_a = 30, 10, 26
@@ -327,9 +327,4 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
             return Uppgift(
                 info_text="Jämför de två låddiagrammen:",
                 plotly_fig=fig,
-                fraga=fraga_val[0],
-                ratt_svar=fraga_val[1],
-                alternativ=["Grupp A", "Grupp B"],
-                input_typ="radio",
-                svarstyp="string"
-            )
+                fraga=fraga
