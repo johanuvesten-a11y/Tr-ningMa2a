@@ -43,7 +43,18 @@ def ratta_svar(u: Uppgift, input_svar: Any) -> str:
         svar_str = str(input_svar).strip()
         if not svar_str:
             return 'tom'
-            
+
+    elif u.svarstyp == 'ekvation_x':
+                svar_clean = svar_str.replace(" ", "").replace("\xa0", "").replace(",", ".").lower()
+                if not svar_clean.startswith("x="):
+                    return 'format_saknar_x'
+                try:
+                    elev_val = float(svar_clean[2:])
+                    facit_val = float(str(u.ratt_svar).replace(" ", "").lower()[2:])
+                    return 'ratt' if abs(elev_val - facit_val) < 0.001 else 'fel'
+                except ValueError:
+                    return 'format'
+        
         try:
             if u.svarstyp == 'int':
                 svar_clean = svar_str.replace(" ", "").replace("\xa0", "")
