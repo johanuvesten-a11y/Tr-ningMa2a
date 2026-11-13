@@ -85,6 +85,21 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
                 if not rhs_elev.free_symbols.issubset({x}):
                     return 'format'
                 return 'ratt' if simplify(rhs_elev - rhs_facit) == 0 else 'fel'
+
+            elif u.svarstyp == 'potensform':
+                svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("\xa0", "").replace("^", "**")
+                ratt_clean = str(u.ratt_svar).replace(" ", "").replace("^", "**")
+                if svar_clean == ratt_clean:
+                    return 'ratt'
+                svar_no_paren = re.sub(r'\*\*\((\-?\d+)\)', r'**\1', svar_clean)
+                if svar_no_paren == ratt_clean:
+                    return 'ratt'
+                transformations = standard_transformations + (implicit_multiplication_application,)
+                expr_elev = parse_expr(svar_clean, transformations=transformations)
+                expr_facit = parse_expr(ratt_clean, transformations=transformations)
+                if simplify(expr_elev - expr_facit) == 0:
+                    return 'ej_forenklad'
+                return 'fel'
                 
             elif u.svarstyp == 'string_math':
                 svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("\xa0", "").replace("^", "**")
@@ -96,13 +111,11 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
                 if simplify(expr_elev - expr_facit) != 0:
                     return 'fel'
                 
-                # Kontrollera att uttrycket faktiskt är utvecklat/förenklat
                 if u.krav_inga_parenteser:
                     s_utan_neg_exp = re.sub(r'\*\*\(-\d+\)', '', svar_clean)
                     if '(' in s_utan_neg_exp or ')' in s_utan_neg_exp:
                         return 'ej_forenklad'
                 
-                # Kontrollera att gemensam faktor i nämnare är förkortad
                 _, den_e = fraction(together(expr_elev))
                 _, den_f = fraction(together(expr_facit))
                 for sym in expr_facit.free_symbols.union(expr_elev.free_symbols):
