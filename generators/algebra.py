@@ -5,39 +5,29 @@ from models import Uppgift
 from utils import formatera_polynom
 
 def skapa_potensregler_uppgift(niva: int) -> Uppgift:
-    """Potenslagarna (multiplikation, division, potens av potens och negativa exponenter)."""
+    """Potenslagarna: Nivå 1 (grundläggande + koefficienter + negativa exponenter), Nivå 2 (olika baser, sammansatta uttryck, potenssummor)."""
     var = random.choice(['x', 'a', 'y'])
     if niva == 1:
-        typ = random.choice(['mult', 'div', 'potens_potens'])
+        typ = random.choice(['mult', 'div', 'potens_potens', 'kombinerat_brak', 'negativ_exp_siffra', 'negativ_exp_var'])
         if typ == 'mult':
             m = random.randint(2, 7)
             n = random.randint(2, 7)
             latex_str = f"{var}^{{{m}}} \\cdot {var}^{{{n}}}"
             ratt = f"{var}^{m + n}"
+            tips = "Använd potenslagen a^m · a^n = a^(m+n)."
         elif typ == 'div':
             n = random.randint(2, 5)
             m = n + random.randint(2, 6)
             latex_str = f"\\frac{{{var}^{{{m}}}}}{{{var}^{{{n}}}}}"
             ratt = f"{var}^{m - n}" if (m - n) > 1 else var
-        else:
+            tips = "Använd potenslagen a^m / a^n = a^(m-n)."
+        elif typ == 'potens_potens':
             m = random.randint(2, 5)
             n = random.randint(2, 4)
             latex_str = f"({var}^{{{m}}})^{{{n}}}"
             ratt = f"{var}^{m * n}"
-            
-        return Uppgift(
-            info_text="Förenkla potensuttrycket så långt som möjligt:",
-            latex_text=latex_str,
-            fraga="Skriv svaret på potensform:",
-            ratt_svar=ratt,
-            input_typ="text",
-            svarstyp="string_math",
-            undertext="Använd potenslagarna (se formelbladet vid behov).",
-            krav_inga_parenteser=True
-        )
-    else:
-        typ = random.choice(['kombinerat_brak', 'negativ_exp_siffra', 'negativ_exp_var'])
-        if typ == 'kombinerat_brak':
+            tips = "Använd potenslagen (a^m)^n = a^(m·n)."
+        elif typ == 'kombinerat_brak':
             c3 = random.choice([2, 3, 4, 5])
             kvot = random.randint(2, 5)
             c1 = random.choice([2, 3, 4, 6])
@@ -64,13 +54,13 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
             )
         elif typ == 'negativ_exp_siffra':
             val = random.choice([
-                ("5^{-2}", "1/25"),
-                ("2^{-3}", "1/8"),
-                ("4^{-2}", "1/16"),
-                ("10^{-2}", "1/100"),
-                ("3^0 + 2^{-2}", "5/4")
+                ("5^{-2}", "1/25", "Kom ihåg att a^(-n) = 1 / a^n. Svara i bråk- eller decimalform."),
+                ("2^{-3}", "1/8", "Kom ihåg att a^(-n) = 1 / a^n. Svara i bråk- eller decimalform."),
+                ("4^{-2}", "1/16", "Kom ihåg att a^(-n) = 1 / a^n. Svara i bråk- eller decimalform."),
+                ("10^{-2}", "1/100", "Kom ihåg att a^(-n) = 1 / a^n. Svara i bråk- eller decimalform."),
+                ("3^0 + 2^{-2}", "5/4", "Kom ihåg att a^0 = 1 och a^(-n) = 1 / a^n.")
             ])
-            expr_latex, ratt = val
+            expr_latex, ratt, tips = val
             return Uppgift(
                 info_text="Beräkna värdet av uttrycket:",
                 latex_text=expr_latex,
@@ -78,7 +68,7 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
                 ratt_svar=ratt,
                 input_typ="text",
                 svarstyp="string_math",
-                undertext="Svara i bråk- eller decimalform (se potenslagarna på formelbladet vid behov).",
+                undertext=tips,
                 krav_inga_parenteser=True
             )
         else:
@@ -94,8 +84,144 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
                 ratt_svar=ratt,
                 input_typ="text",
                 svarstyp="string_math",
-                undertext="Använd potenslagarna för division.",
+                undertext="Använd potenslagen a^m / a^n = a^(m-n).",
                 krav_inga_parenteser=True
+            )
+            
+        return Uppgift(
+            info_text="Förenkla potensuttrycket så långt som möjligt:",
+            latex_text=latex_str,
+            fraga="Skriv svaret på potensform:",
+            ratt_svar=ratt,
+            input_typ="text",
+            svarstyp="string_math",
+            undertext=tips,
+            krav_inga_parenteser=True
+        )
+    else:
+        typ = random.choice(['olika_baser_siffra', 'potens_av_produkt', 'lika_potenstermer', 'ekvation_olika_baser'])
+        
+        if typ == 'olika_baser_siffra':
+            bas, stor_bas, k_exp = random.choice([
+                (2, 4, 2),
+                (2, 8, 3),
+                (3, 9, 2),
+                (3, 27, 3),
+                (5, 25, 2)
+            ])
+            op = random.choice(['mult', 'div', 'kombi'])
+            if op == 'mult':
+                e1 = random.randint(2, 6)
+                e2 = random.randint(2, 4)
+                if random.choice([True, False]):
+                    latex_str = f"{bas}^{{{e1}}} \\cdot {stor_bas}^{{{e2}}}"
+                else:
+                    latex_str = f"{stor_bas}^{{{e2}}} \\cdot {bas}^{{{e1}}}"
+                ratt_exp = e1 + k_exp * e2
+            elif op == 'div':
+                e2 = random.randint(2, 5)
+                e1 = random.randint(2, 4)
+                if k_exp * e1 == e2:
+                    e1 += 1
+                latex_str = f"\\frac{{{stor_bas}^{{{e1}}}}}{{{bas}^{{{e2}}}}}"
+                ratt_exp = k_exp * e1 - e2
+            else:
+                e1 = random.randint(2, 4)
+                e2 = random.randint(2, 5)
+                e3 = random.randint(2, 4)
+                ratt_exp = k_exp * e1 + e2 - e3
+                if ratt_exp in [0, 1]:
+                    e1 += 1
+                    ratt_exp = k_exp * e1 + e2 - e3
+                latex_str = f"\\frac{{{stor_bas}^{{{e1}}} \\cdot {bas}^{{{e2}}}}}{{{bas}^{{{e3}}}}}"
+                
+            return Uppgift(
+                info_text="Skriv uttrycket som en enda potens:",
+                latex_text=latex_str,
+                fraga=f"Skriv svaret på potensform med basen {bas} (t.ex. {bas}^5):",
+                ratt_svar=f"{bas}^{ratt_exp}",
+                input_typ="text",
+                svarstyp="potensform",
+                undertext=f"Skriv om {stor_bas} som en potens med basen {bas} innan du använder potenslagarna."
+            )
+            
+        elif typ == 'potens_av_produkt':
+            fall = random.choice(['mult_neg', 'div_koeff'])
+            if fall == 'mult_neg':
+                c1 = random.choice([2, 3, 4])
+                e1 = random.randint(2, 4)
+                p = random.choice([2, 3])
+                c2 = random.choice([2, 3, 5])
+                e2 = random.randint(1, e1 * p - 1)
+                
+                koeff = (c1 ** p) * c2
+                res_exp = e1 * p - e2
+                var_del = var if res_exp == 1 else f"{var}^{res_exp}"
+                latex_str = f"({c1}{var}^{{{e1}}})^{{{p}}} \\cdot {c2}{var}^{{-{e2}}}"
+                ratt = f"{koeff}{var_del}"
+            else:
+                c1 = random.choice([2, 3, 4])
+                p = random.choice([2, 3])
+                c2 = c1 if p == 2 else random.choice([2, 4])
+                koeff = (c1 ** p) // c2
+                e1 = random.randint(2, 4)
+                e2 = random.randint(2, e1 * p - 1)
+                res_exp = e1 * p - e2
+                var_del = var if res_exp == 1 else f"{var}^{res_exp}"
+                latex_str = f"\\frac{{({c1}{var}^{{{e1}}})^{{{p}}}}}{{{c2}{var}^{{{e2}}}}}"
+                ratt = f"{koeff}{var_del}" if koeff > 1 else var_del
+                
+            return Uppgift(
+                info_text="Förenkla uttrycket så långt som möjligt:",
+                latex_text=latex_str,
+                fraga="Ange det förenklade uttrycket:",
+                ratt_svar=ratt,
+                input_typ="text",
+                svarstyp="string_math",
+                undertext="Använd potenslagen (a·b)^n = a^n · b^n på parentesen först.",
+                krav_inga_parenteser=True
+            )
+            
+        elif typ == 'lika_potenstermer':
+            scenario = random.choice([
+                ("3^x + 3^x + 3^x", 3, "3^(x+1)", "Tre stycken 3^x kan skrivas som 3 · 3^x."),
+                ("2^x + 2^x + 2^x + 2^x", 2, "2^(x+2)", "Fyra stycken 2^x är 4 · 2^x. Skriv 4 som en potens med basen 2."),
+                ("5 \\cdot 2^x - 2^x", 2, "2^(x+2)", "Förenkla koefficienterna framför 2^x först (5 - 1 = 4)."),
+                ("10 \\cdot 3^x - 3^x", 3, "3^(x+2)", "Förenkla koefficienterna framför 3^x först (10 - 1 = 9)."),
+                ("4 \\cdot 5^x + 5^x", 5, "5^(x+1)", "Lägg ihop termerna (4 + 1 = 5) och använd sedan potenslagarna."),
+                ("3 \\cdot 2^x + 5 \\cdot 2^x", 2, "2^(x+3)", "Lägg ihop termerna (3 + 5 = 8) och skriv 8 med basen 2.")
+            ])
+            latex_str, bas, ratt, tips = scenario
+            return Uppgift(
+                info_text="Förenkla uttrycket och skriv det som en enda potens:",
+                latex_text=latex_str,
+                fraga=f"Skriv svaret som en potens med basen {bas} (t.ex. {bas}^(x+1)):",
+                ratt_svar=ratt,
+                input_typ="text",
+                svarstyp="potensform",
+                undertext=tips
+            )
+            
+        else:  # ekvation_olika_baser
+            ekv_fall = random.choice([
+                ("2^x = 8^3", 9, "Skriv om 8 som en potens med basen 2."),
+                ("2^x = 4^5", 10, "Skriv om 4 som en potens med basen 2."),
+                ("3^x = 9^4", 8, "Skriv om 9 som en potens med basen 3."),
+                ("3^x = 27^2", 6, "Skriv om 27 som en potens med basen 3."),
+                ("5^x = 25^3", 6, "Skriv om 25 som en potens med basen 5."),
+                ("2^x = \\frac{1}{16}", -4, "Skriv 1/16 som en potens med basen 2 och negativ exponent."),
+                ("3^x = \\frac{1}{27}", -3, "Skriv 1/27 som en potens med basen 3 och negativ exponent."),
+                ("5^x = \\frac{1}{25}", -2, "Skriv 1/25 som en potens med basen 5 och negativ exponent.")
+            ])
+            latex_str, ratt_x, tips = ekv_fall
+            return Uppgift(
+                info_text="Bestäm exponenten x i ekvationen:",
+                latex_text=latex_str,
+                fraga="Ange värdet på x:",
+                ratt_svar=ratt_x,
+                input_typ="text",
+                svarstyp="int",
+                undertext=tips
             )
 
 def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
@@ -106,15 +232,15 @@ def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
         if typ == 'kvad1':
             uttryck = f"(x + {a})^2"
             svar = formatera_polynom([(1, 'x^2'), (2*a, 'x'), (a**2, '')])
-            tips = "Använd kvadreringsregeln eller multiplicera ihop parenteserna."
+            tips = "Använd första kvadreringsregeln: (a + b)² = a² + 2ab + b²."
         elif typ == 'kvad2':
             uttryck = f"(x - {a})^2"
             svar = formatera_polynom([(1, 'x^2'), (-2*a, 'x'), (a**2, '')])
-            tips = "Använd kvadreringsregeln och var noggrann med tecknen."
+            tips = "Använd andra kvadreringsregeln: (a - b)² = a² - 2ab + b²."
         else:
             uttryck = f"(x + {a})(x - {a})"
             svar = formatera_polynom([(1, 'x^2'), (-a**2, '')])
-            tips = "Använd konjugatregeln eller multiplicera ihop parenteserna."
+            tips = "Använd konjugatregeln: (a + b)(a - b) = a² - b²."
             
         return Uppgift(
             info_text="Utveckla och förenkla uttrycket:",
@@ -139,7 +265,7 @@ def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
             a = random.randint(2, 5)
             uttryck = f"({k}x - {a})^2 - {k**2}x^2"
             svar = formatera_polynom([(-2*k*a, 'x'), (a**2, '')])
-            tips = "Tänk på att hela uttrycket framför minustecknet ska kvadreras."
+            tips = f"Kom ihåg att ({k}x)² = {k**2}x² när du använder kvadreringsregeln."
         else:
             a = random.randint(2, 6)
             uttryck = f"(x + {a})^2 - (x - {a})^2"
@@ -166,18 +292,22 @@ def skapa_rationella_uttryck_uppgift(niva: int) -> Uppgift:
             talj = formatera_polynom([(1, 'x^2'), (-a**2, '')])
             namn = formatera_polynom([(1, 'x'), (a, '')])
             svar = formatera_polynom([(1, 'x'), (-a, '')])
+            tips = "Faktorisera täljaren med konjugatregeln."
         elif typ == 'konjugat_minus':
             talj = formatera_polynom([(1, 'x^2'), (-a**2, '')])
             namn = formatera_polynom([(1, 'x'), (-a, '')])
             svar = formatera_polynom([(1, 'x'), (a, '')])
+            tips = "Faktorisera täljaren med konjugatregeln."
         elif typ == 'kvadrering_plus':
             talj = formatera_polynom([(1, 'x^2'), (2*a, 'x'), (a**2, '')])
             namn = formatera_polynom([(1, 'x'), (a, '')])
             svar = formatera_polynom([(1, 'x'), (a, '')])
+            tips = "Faktorisera täljaren baklänges med första kvadreringsregeln."
         else:
             talj = formatera_polynom([(1, 'x^2'), (-2*a, 'x'), (a**2, '')])
             namn = formatera_polynom([(1, 'x'), (-a, '')])
             svar = formatera_polynom([(1, 'x'), (-a, '')])
+            tips = "Faktorisera täljaren baklänges med andra kvadreringsregeln."
             
         return Uppgift(
             info_text="Förenkla det rationella uttrycket så långt som möjligt:",
@@ -186,7 +316,7 @@ def skapa_rationella_uttryck_uppgift(niva: int) -> Uppgift:
             ratt_svar=svar,
             input_typ="text",
             svarstyp="string_math",
-            undertext="Faktorisera täljaren och förkorta gemensamma faktorer."
+            undertext=tips
         )
     else:
         k = random.choice([2, 3, 4])
@@ -195,17 +325,17 @@ def skapa_rationella_uttryck_uppgift(niva: int) -> Uppgift:
             talj = formatera_polynom([(k, 'x^2'), (-k*(a**2), '')])
             namn = formatera_polynom([(1, 'x'), (-a, '')])
             svar = f"{k}*(x + {a})"
-            tips = "Faktorisera täljaren i flera steg innan du förkortar."
+            tips = f"Bryt först ut {k} i täljaren och använd sedan konjugatregeln."
         elif typ == 'namnare_konj':
             talj = formatera_polynom([(k, 'x'), (-k*a, '')])
             namn = formatera_polynom([(1, 'x^2'), (-a**2, '')])
             svar = f"{k}/(x + {a})"
-            tips = "Faktorisera både täljare och nämnare så långt som möjligt."
+            tips = f"Bryt ut {k} i täljaren och faktorisera nämnaren med konjugatregeln."
         else:
             talj = formatera_polynom([(1, 'x'), (-a, '')])
             namn = formatera_polynom([(1, 'x^2'), (-2*a, 'x'), (a**2, '')])
             svar = f"1/(x - {a})"
-            tips = "Faktorisera nämnaren innan du förkortar."
+            tips = "Faktorisera nämnaren med andra kvadreringsregeln."
             
         return Uppgift(
             info_text="Förenkla det rationella uttrycket i två steg:",
@@ -228,18 +358,18 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
             f2 = f"(x - {r2})" if r2 > 0 else f"(x + {abs(r2)})"
             ekv_str = f"{f1}{f2} = 0"
             ratt_svar = sorted([float(r1), float(r2)])
-            tips = "Ekvationen är skriven i faktorform."
+            tips = "Ekvationen är redan faktoriserad – använd nollproduktmetoden direkt!"
         elif typ == 'nollprod_utbryt':
             r2 = random.choice([-8, -6, -5, -4, -3, -2, 2, 3, 4, 5, 6, 8])
             ekv_str = f"{formatera_polynom([(1, 'x^2'), (-r2, 'x')])} = 0"
             ratt_svar = sorted([0.0, float(r2)])
-            tips = "Faktorisera vänsterledet innan du löser ekvationen."
+            tips = "Bryt ut x och använd nollproduktmetoden."
         elif typ == 'ren_kvadrat':
             a = random.choice([1, 2, 3])
             r = random.randint(2, 6)
             ekv_str = f"{formatera_polynom([(a, 'x^2'), (-a*(r**2), '')])} = 0"
             ratt_svar = sorted([float(-r), float(r)])
-            tips = "Lös ut x² och tänk på hur många lösningar ekvationen har."
+            tips = "Isolera x² och dra roten ur båda leden (glöm inte ±)."
         else:
             r1 = random.randint(-6, 5)
             r2 = random.choice([x for x in range(-6, 7) if x != r1])
@@ -247,7 +377,7 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
             q = r1 * r2
             ekv_str = f"{formatera_polynom([(1, 'x^2'), (p, 'x'), (q, '')])} = 0"
             ratt_svar = sorted([float(r1), float(r2)])
-            tips = None
+            tips = "Använd PQ-formeln."
             
         return Uppgift(
             info_text="Lös andragradsekvationen:",
@@ -277,10 +407,10 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="array_float",
                 flera_labels=["x₁ =", "x₂ ="],
-                undertext="Se till att x²-termen har koefficienten 1 innan du använder PQ-formeln."
+                undertext=f"Tips: Dividera först hela ekvationen med {a} så att x² står ensamt."
             )
         elif typ == 'omskriv_parentes':
-            r1 = random.choice([x for x in range(-5, 5) if x != 0])
+            r1 = random.randint(-5, 4)
             r2 = random.choice([x for x in range(-5, 6) if x != r1 and (r1 + x) != 0 and (r1 * x) != 0])
             p = -(r1 + r2)
             q = r1 * r2
@@ -295,7 +425,7 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="array_float",
                 flera_labels=["x₁ =", "x₂ ="],
-                undertext="Skriv om ekvationen på standardform innan du löser den."
+                undertext="Tips: Multiplicera in x i parentesen och samla alla termer i vänsterledet (= 0)."
             )
         elif typ == 'omskriv_kvadrat':
             a = random.choice([-4, -3, -2, 2, 3, 4])
@@ -312,7 +442,7 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="array_float",
                 flera_labels=["x₁ =", "x₂ ="],
-                undertext="Förenkla vänsterledet och samla alla termer."
+                undertext="Tips: Utveckla vänsterledet med kvadreringsregeln och förenkla."
             )
         else:
             r = random.choice([-5, -4, -3, -2, 2, 3, 4, 5])
@@ -325,7 +455,8 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
                 fraga="Ekvationen har endast en lösning (dubbelrot). Ange lösningen:",
                 ratt_svar=r,
                 input_typ="text",
-                svarstyp="int"
+                svarstyp="int",
+                undertext="Använd PQ-formeln eller kvadreringsregeln baklänges."
             )
 
 def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
@@ -368,7 +499,7 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="ekvationssystem",
                 flera_labels=["x =", "y ="],
-                undertext="Hitta linjernas skärningspunkt i koordinatsystemet."
+                undertext="Läs av x- och y-koordinaten där linjerna korsar varandra."
             )
         else:
             k = random.choice([-2, -1, 2, 3])
@@ -387,7 +518,7 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="ekvationssystem",
                 flera_labels=["x =", "y ="],
-                undertext="Välj en lämplig algebraisk lösningsmetod."
+                undertext="Tips: Använd substitutionsmetoden genom att sätta in uttrycket för y i den andra ekvationen."
             )
     else:
         typ = random.choices(['forlang_bada', 'antal_losningar'], weights=[0.7, 0.3], k=1)[0]
@@ -413,7 +544,7 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
                 input_typ="flera_text",
                 svarstyp="ekvationssystem",
                 flera_labels=["x =", "y ="],
-                undertext="Lös systemet med additions- eller substitutionsmetoden."
+                undertext="Tips: Använd additionsmetoden – här behöver du förlänga båda ekvationerna."
             )
         else:
             k = random.choice([-3, -2, 2, 3])
@@ -443,5 +574,5 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
                 alternativ=alts,
                 input_typ="radio",
                 svarstyp="string",
-                undertext="Undersök linjernas lutning och skärning med y-axeln."
+                undertext="Skriv om den andra ekvationen på formen y = kx + m och jämför lutning (k) och m-värde."
             )
