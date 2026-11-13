@@ -7,34 +7,111 @@ from utils import formatera_polynom
 def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
     """Räta linjens ekvation y = kx + m."""
     if niva == 1:
-        k = random.choice([-3, -2, -1, 1, 2, 3])
-        m = random.randint(-4, 4)
-        x_vals = np.linspace(-5, 5, 100)
-        y_vals = k * x_vals + m
+        typ = random.choice(['avlas_graf', 'punkt_pa_linje', 'skarning_axel', 'k_och_punkt', 'tva_punkter'])
+        
+        if typ == 'avlas_graf':
+            k = random.choice([-3, -2, -1, 1, 2, 3])
+            m = random.randint(-4, 4)
+            x_vals = np.linspace(-5, 5, 100)
+            y_vals = k * x_vals + m
 
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
-        fig.update_layout(
-            xaxis=dict(title="x", range=[-5, 5], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
-            yaxis=dict(title="y", range=[-6, 6], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
-            height=340, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
-        )
-        return Uppgift(
-            info_text="Bestäm ekvationen för den räta linjen i diagrammet:",
-            plotly_fig=fig,
-            fraga="Skriv linjens ekvation på formen y = kx + m:",
-            ratt_svar=f"y={k}x+{m}",
-            input_typ="text",
-            svarstyp="ekvation_linje",
-            undertext="Bestäm linjens lutning (k) och skärning med y-axeln (m) ur grafen."
-        )
-    else:
-        typ = random.choice(['tva_punkter', 'parallell'])
-        if typ == 'tva_punkter':
-            k = random.choice([-4, -3, -2, -1, 2, 3, 4])
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=x_vals, y=y_vals, mode='lines', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
+            fig.update_layout(
+                xaxis=dict(title="x", range=[-5, 5], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+                yaxis=dict(title="y", range=[-6, 6], dtick=1, zeroline=True, zerolinewidth=2, zerolinecolor='black', showgrid=True, gridcolor='#e0e0e0'),
+                height=340, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
+            )
+            return Uppgift(
+                info_text="Bestäm ekvationen för den räta linjen i diagrammet:",
+                plotly_fig=fig,
+                fraga="Skriv linjens ekvation på formen y = kx + m:",
+                ratt_svar=f"y={k}x+{m}",
+                input_typ="text",
+                svarstyp="ekvation_linje",
+                undertext="Bestäm linjens lutning (k) och skärning med y-axeln (m) ur grafen."
+            )
+            
+        elif typ == 'punkt_pa_linje':
+            k = random.choice([-4, -3, -2, 2, 3, 4])
+            m = random.choice([x for x in range(-7, 8) if x != 0])
+            x_val = random.choice([x for x in range(-5, 6) if x != 0])
+            y_val = k * x_val + m
+            linje_str = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
+            
+            if random.choice(['berakna_y', 'berakna_x']) == 'berakna_y':
+                return Uppgift(
+                    info_box_text=f"En rät linje har ekvationen {linje_str}. En punkt på linjen har x-koordinaten {x_val}.",
+                    info_box_style="blue",
+                    fraga="Beräkna punktens y-koordinat:",
+                    ratt_svar=y_val,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Sätt in det givna x-värdet i linjens ekvation."
+                )
+            else:
+                return Uppgift(
+                    info_box_text=f"En rät linje har ekvationen {linje_str}. En punkt på linjen har y-koordinaten {y_val}.",
+                    info_box_style="blue",
+                    fraga="Beräkna punktens x-koordinat:",
+                    ratt_svar=x_val,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Sätt in det givna y-värdet i linjens ekvation och lös ekvationen."
+                )
+                
+        elif typ == 'skarning_axel':
+            axel = random.choice(['x', 'y'])
+            if axel == 'x':
+                k = random.choice([-3, -2, -1, 1, 2, 3])
+                x0 = random.choice([x for x in range(-5, 6) if x != 0])
+                m = -k * x0
+                linje_str = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
+                return Uppgift(
+                    info_box_text=f"En rät linje har ekvationen {linje_str}.",
+                    info_box_style="blue",
+                    fraga="Bestäm koordinaterna för linjens skärningspunkt med x-axeln:",
+                    ratt_svar=[float(x0), 0.0],
+                    input_typ="flera_text",
+                    svarstyp="punkt",
+                    flera_labels=["x =", "y ="],
+                    undertext="Fundera på vilket y-värde alla punkter på x-axeln har."
+                )
+            else:
+                k = random.choice([-4, -3, -2, 2, 3, 4])
+                m = random.choice([x for x in range(-7, 8) if x != 0])
+                linje_str = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
+                return Uppgift(
+                    info_box_text=f"En rät linje har ekvationen {linje_str}.",
+                    info_box_style="blue",
+                    fraga="Bestäm koordinaterna för linjens skärningspunkt med y-axeln:",
+                    ratt_svar=[0.0, float(m)],
+                    input_typ="flera_text",
+                    svarstyp="punkt",
+                    flera_labels=["x =", "y ="],
+                    undertext="Fundera på vilket x-värde alla punkter på y-axeln har."
+                )
+                
+        elif typ == 'k_och_punkt':
+            k = random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
+            m = random.randint(-6, 6)
+            px = random.choice([x for x in range(-4, 5) if x != 0])
+            py = k * px + m
+            return Uppgift(
+                info_box_text=f"En rät linje har riktningskoefficienten k = {k} och går genom punkten ({px}, {py}).",
+                info_box_style="blue",
+                fraga="Bestäm linjens ekvation på formen y = kx + m:",
+                ratt_svar=f"y={k}x+{m}",
+                input_typ="text",
+                svarstyp="ekvation_linje",
+                undertext="Sätt in k-värdet och punktens koordinater i räta linjens ekvation."
+            )
+            
+        else:  # tva_punkter (heltals-k)
+            k = random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
             m = random.randint(-6, 6)
             x1 = random.randint(-3, 2)
-            x2 = x1 + random.randint(2, 4)
+            x2 = x1 + random.randint(1, 4)
             y1, y2 = k * x1 + m, k * x2 + m
             return Uppgift(
                 info_box_text=f"En rät linje går genom punkterna ({x1}, {y1}) och ({x2}, {y2}).",
@@ -45,7 +122,29 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
                 svarstyp="ekvation_linje",
                 undertext="Bestäm först riktningskoefficienten k och därefter m-värdet."
             )
-        else:
+            
+    else:  # Nivå 2
+        typ = random.choice(['tva_punkter_brak', 'parallell', 'skarning_allman_form', 'k_och_punkt_brak'])
+        
+        if typ == 'tva_punkter_brak':
+            k_num = random.choice([-5, -3, -1, 1, 3, 5])
+            k_den = 2
+            m = random.randint(-5, 5)
+            x1 = random.choice([-4, -2, 0, 2])
+            x2 = x1 + random.choice([2, 4])
+            y1 = (k_num * x1) // k_den + m
+            y2 = (k_num * x2) // k_den + m
+            return Uppgift(
+                info_box_text=f"En rät linje går genom punkterna ({x1}, {y1}) och ({x2}, {y2}).",
+                info_box_style="blue",
+                fraga="Bestäm linjens ekvation på formen y = kx + m:",
+                ratt_svar=f"y=({k_num}/{k_den})x+{m}",
+                input_typ="text",
+                svarstyp="ekvation_linje",
+                undertext="Bestäm först riktningskoefficienten k och därefter m-värdet."
+            )
+            
+        elif typ == 'parallell':
             k = random.choice([-3, -2, 2, 3, 4])
             m1 = random.randint(-5, 5)
             m2 = random.choice([x for x in range(-6, 7) if x != m1])
@@ -60,6 +159,48 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
                 input_typ="text",
                 svarstyp="ekvation_linje",
                 undertext="Jämför linjernas lutning."
+            )
+            
+        elif typ == 'skarning_allman_form':
+            a = random.choice([2, 3, 4])
+            b = random.choice([-4, -3, -2, 2, 3, 4])
+            mult = random.choice([-2, -1, 1, 2, 3])
+            c = a * abs(b) * mult
+            ekv_str = f"{formatera_polynom([(a, 'x'), (b, 'y')])} = {c}"
+            axel = random.choice(['x', 'y'])
+            if axel == 'x':
+                x0 = c // a
+                ratt = [float(x0), 0.0]
+            else:
+                y0 = c // b
+                ratt = [0.0, float(y0)]
+            return Uppgift(
+                info_box_text=f"En rät linje beskrivs av ekvationen {ekv_str}.",
+                info_box_style="blue",
+                fraga=f"Bestäm koordinaterna för linjens skärningspunkt med {axel}-axeln:",
+                ratt_svar=ratt,
+                input_typ="flera_text",
+                svarstyp="punkt",
+                flera_labels=["x =", "y ="],
+                undertext="Sätt in 0 för den variabel som är noll på axeln och lös ekvationen."
+            )
+            
+        else:  # k_och_punkt_brak
+            k_num = random.choice([-3, -1, 1, 3])
+            k_den = 2
+            k_val = k_num / k_den
+            m = random.randint(-5, 5)
+            px = random.choice([-4, -2, 2, 4])
+            py = int(k_val * px + m)
+            k_str = f"{k_num}/{k_den}"
+            return Uppgift(
+                info_box_text=f"En rät linje har riktningskoefficienten k = {k_str} och går genom punkten ({px}, {py}).",
+                info_box_style="blue",
+                fraga="Bestäm linjens ekvation på formen y = kx + m:",
+                ratt_svar=f"y=({k_num}/{k_den})x+{m}",
+                input_typ="text",
+                svarstyp="ekvation_linje",
+                undertext="Sätt in k-värdet och punktens koordinater för att bestämma m."
             )
 
 def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
