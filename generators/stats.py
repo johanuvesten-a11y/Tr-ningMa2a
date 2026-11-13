@@ -3,6 +3,7 @@ import numpy as np
 import plotly.graph_objects as go
 from models import Uppgift
 
+
 def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
     """Normalfördelning enligt Skolverkets formelblad (34,1 % | 13,6 % | 2,3 %)."""
     scenarier = [
@@ -13,10 +14,10 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
     ]
     sc = random.choice(scenarier)
     mu, sigma = sc["mu"], sc["sigma"]
-    
+
     if niva == 1:
         fraga_typ = random.choice(['mellersta_68', 'mellersta_95', 'halva_68', 'svans_2sigma', 'jamfor_kurvor'])
-        
+
         if fraga_typ == 'jamfor_kurvor':
             aspekt = random.choice(['mu', 'sigma'])
             if aspekt == 'mu':
@@ -35,11 +36,11 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 ratt = "Kurva A" if sig_a > sig_b else "Kurva B"
                 fraga = "Vilken normalfördelning har störst standardavvikelse (σ)?"
                 tips = "Standardavvikelsen (σ) är ett spridningsmått."
-                
+
             x_vals = np.linspace(10, 90, 400)
             y_a = (1 / (sig_a * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_vals - mu_a) / sig_a) ** 2)
             y_b = (1 / (sig_b * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_vals - mu_b) / sig_b) ** 2)
-            
+
             fig = go.Figure()
             fig.add_trace(go.Scatter(x=x_vals, y=y_a, mode='lines', name='Kurva A', line=dict(color='#0056b3', width=3), hoverinfo='skip'))
             fig.add_trace(go.Scatter(x=x_vals, y=y_b, mode='lines', name='Kurva B', line=dict(color='#8B008B', width=3, dash='dash'), hoverinfo='skip'))
@@ -59,7 +60,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 svarstyp="string",
                 undertext=tips
             )
-            
+
         if fraga_typ == 'mellersta_68':
             v_low, v_high = mu - sigma, mu + sigma
             ratt_svar = 68.2
@@ -92,7 +93,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 fill_range = (mu - 4 * sigma, v_low)
             ratt_svar = 2.3
             sub_text = "Ta hjälp av normalfördelningskurvan på formelbladet."
-            
+
     else:  # Nivå 2
         fraga_typ = random.choice([
             'kumulativ_1sigma',       # 84,1 %
@@ -104,7 +105,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
             'antal_observationer',
             'baklanges_mu_sigma'
         ])
-        
+
         if fraga_typ == 'baklanges_mu_sigma':
             typ_int = random.choice([1, 2])
             v_low = mu - typ_int * sigma
@@ -120,7 +121,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 flera_labels=[f"Medelvärde μ ({sc['enhet']}) =", f"Standardavvikelse σ ({sc['enhet']}) ="],
                 undertext="Utgå från normalfördelningskurvans symmetri och formelbladets procentsatser."
             )
-            
+
         if fraga_typ == 'kumulativ_1sigma':
             ratt_svar = 84.1
             if random.choice(['mindre', 'storre']) == 'mindre':
@@ -244,35 +245,67 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
         undertext=sub_text
     )
 
+
+def _skapa_laddiagram_figur(min_v: int, q1: int, median: int, q3: int, max_v: int) -> go.Figure:
+    """Skapar ett liggande låddiagram med tydliga delstreck (minor ticks) och utan hover-fusk."""
+    fig = go.Figure()
+    fig.add_trace(go.Box(
+        q1=[q1],
+        median=[median],
+        q3=[q3],
+        lowerfence=[min_v],
+        upperfence=[max_v],
+        orientation='h',
+        hoverinfo='skip',
+        fillcolor='lightpink',
+        line=dict(color='purple', width=2)
+    ))
+
+    x_min = max(0, min_v - 3)
+    x_max = max_v + 3
+
+    fig.update_layout(
+        xaxis=dict(
+            range=[x_min, x_max],
+            showgrid=True,
+            gridcolor='#d8d8d8',
+            zeroline=False,
+            dtick=5,
+            minor=dict(dtick=1, ticklen=5, showgrid=True, gridcolor='#f0f0f0')
+        ),
+        yaxis=dict(showticklabels=False),
+        height=230,
+        margin=dict(l=20, r=20, t=20, b=35),
+        plot_bgcolor='white',
+        showlegend=False,
+        hovermode=False
+    )
+    return fig
+
+
 def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
-    """Låddiagram (Boxplots) i liggande format med finare delstreck."""
+    """Låddiagram (Boxplots), kvartiler, kvartilavstånd och variationsbredd med nivåprogression."""
+    q1 = random.randint(14, 24)
+    median = q1 + random.randint(4, 9)
+    q3 = median + random.randint(4, 9)
+    min_v = q1 - random.randint(4, 9)
+    max_v = q3 + random.randint(4, 9)
+
     if niva == 1:
-        q1 = random.randint(15, 25)
-        median = q1 + random.randint(4, 9)
-        q3 = median + random.randint(4, 9)
-        min_v = q1 - random.randint(4, 9)
-        max_v = q3 + random.randint(4, 9)
-        
-        fig = go.Figure()
-        fig.add_trace(go.Box(
-            q1=[q1], median=[median], q3=[q3],
-            lowerfence=[min_v], upperfence=[max_v],
-            orientation='h', hoverinfo='skip',
-            fillcolor='lightpink', line=dict(color='purple')
-        ))
-        fig.update_layout(
-            xaxis=dict(
-                showgrid=True, gridcolor='#d0d0d0', zeroline=False, dtick=5,
-                ticks='outside', ticklen=8, tickwidth=1.5,
-                minor=dict(dtick=1, ticks='outside', ticklen=4, tickcolor='#666', showgrid=True, gridcolor='#f2f2f2')
-            ),
-            yaxis=dict(showticklabels=False),
-            height=230, margin=dict(l=20, r=20, t=20, b=35),
-            plot_bgcolor='white', showlegend=False, hovermode=False
-        )
-        
-        typ = random.choice(['kvartilavstand', 'variationsbredd', 'median', 'q1', 'q3'])
-        if typ == 'kvartilavstand':
+        fig = _skapa_laddiagram_figur(min_v, q1, median, q3, max_v)
+        typ = random.choice(['median', 'kvartilavstand', 'variationsbredd', 'avlas_kvartil'])
+
+        if typ == 'median':
+            return Uppgift(
+                info_text="Studera låddiagrammet nedan:",
+                plotly_fig=fig,
+                fraga="Vilket värde har medianen?",
+                ratt_svar=median,
+                input_typ="text",
+                svarstyp="int",
+                undertext="Medianen motsvaras av det lodräta strecket inuti lådan."
+            )
+        elif typ == 'kvartilavstand':
             return Uppgift(
                 info_text="Studera låddiagrammet nedan:",
                 plotly_fig=fig,
@@ -280,7 +313,7 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 ratt_svar=q3 - q1,
                 input_typ="text",
                 svarstyp="int",
-                undertext="Kvartilavståndet är ett spridningsmått kopplat till lådan."
+                undertext="Kvartilavståndet är lådans bredd (Q₃ − Q₁)."
             )
         elif typ == 'variationsbredd':
             return Uppgift(
@@ -290,126 +323,186 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 ratt_svar=max_v - min_v,
                 input_typ="text",
                 svarstyp="int",
-                undertext="Variationsbredden anger skillnaden mellan datamaterialets yttervärden."
-            )
-        elif typ == 'median':
-            return Uppgift(
-                info_text="Studera låddiagrammet nedan:",
-                plotly_fig=fig,
-                fraga="Vilket värde har medianen?",
-                ratt_svar=median,
-                input_typ="text",
-                svarstyp="int"
-            )
-        elif typ == 'q1':
-            return Uppgift(
-                info_text="Studera låddiagrammet nedan:",
-                plotly_fig=fig,
-                fraga="Bestäm den undre kvartilen (Q₁):",
-                ratt_svar=q1,
-                input_typ="text",
-                svarstyp="int"
+                undertext="Variationsbredden är skillnaden mellan det största och det minsta värdet."
             )
         else:
-            return Uppgift(
-                info_text="Studera låddiagrammet nedan:",
-                plotly_fig=fig,
-                fraga="Bestäm den övre kvartilen (Q₃):",
-                ratt_svar=q3,
-                input_typ="text",
-                svarstyp="int"
-            )
-    else:
-        typ = random.choice(['procent_andel', 'jamfor_tva'])
-        if typ == 'procent_andel':
-            q1 = random.randint(15, 25)
-            median = q1 + random.randint(4, 9)
-            q3 = median + random.randint(4, 9)
-            min_v = q1 - random.randint(4, 9)
-            max_v = q3 + random.randint(4, 9)
-            
+            if random.choice(['q1', 'q3']) == 'q1':
+                return Uppgift(
+                    info_text="Studera låddiagrammet nedan:",
+                    plotly_fig=fig,
+                    fraga="Vilket värde har den nedre kvartilen (Q₁)?",
+                    ratt_svar=q1,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Den nedre kvartilen (Q₁) avläses vid lådans vänstra kant."
+                )
+            else:
+                return Uppgift(
+                    info_text="Studera låddiagrammet nedan:",
+                    plotly_fig=fig,
+                    fraga="Vilket värde har den övre kvartilen (Q₃)?",
+                    ratt_svar=q3,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Den övre kvartilen (Q₃) avläses vid lådans högra kant."
+                )
+
+    else:  # Nivå 2
+        typ = random.choice(['jamfor_laddiagram', 'andel_antal_kvartil', 'talmangd_kvartiler'])
+
+        if typ == 'jamfor_laddiagram':
+            aspekt = random.choice(['median', 'iqr', 'variationsbredd'])
+
+            # Grupp A
+            q1_a = random.randint(15, 22)
+            med_a = q1_a + random.randint(4, 7)
+            q3_a = med_a + random.randint(4, 7)
+            min_a = q1_a - random.randint(4, 7)
+            max_a = q3_a + random.randint(4, 7)
+
+            # Grupp B konstrueras så att skillnaden i efterfrågad egenskap är tydlig
+            if aspekt == 'median':
+                shift = random.choice([-6, 6])
+                q1_b = q1_a + shift
+                med_b = med_a + shift
+                q3_b = q3_a + shift
+                min_b = min_a + shift
+                max_b = max_a + shift
+                ratt = "Grupp B" if med_b > med_a else "Grupp A"
+                fraga = "Vilken grupp har störst median?"
+                tips = "Jämför placeringen av mittstrecket i de två lådorna."
+            elif aspekt == 'iqr':
+                q1_b = q1_a - 3
+                med_b = med_a
+                q3_b = q3_a + 4
+                min_b = min_a - 2
+                max_b = max_a + 2
+                if random.choice([True, False]):
+                    min_a, q1_a, med_a, q3_a, max_a, min_b, q1_b, med_b, q3_b, max_b = (
+                        min_b, q1_b, med_b, q3_b, max_b, min_a, q1_a, med_a, q3_a, max_a
+                    )
+                ratt = "Grupp A" if (q3_a - q1_a) > (q3_b - q1_b) else "Grupp B"
+                fraga = "Vilken grupp har störst kvartilavstånd (IQR)?"
+                tips = "Kvartilavståndet (Q₃ − Q₁) motsvarar själva lådans längd."
+            else:
+                q1_b = q1_a
+                med_b = med_a
+                q3_b = q3_a
+                min_b = min_a - 5
+                max_b = max_a + 5
+                if random.choice([True, False]):
+                    min_a, q1_a, med_a, q3_a, max_a, min_b, q1_b, med_b, q3_b, max_b = (
+                        min_b, q1_b, med_b, q3_b, max_b, min_a, q1_a, med_a, q3_a, max_a
+                    )
+                ratt = "Grupp A" if (max_a - min_a) > (max_b - min_b) else "Grupp B"
+                fraga = "Vilken grupp har störst variationsbredd?"
+                tips = "Variationsbredden är hela avståndet från minsta till största värde."
+
             fig = go.Figure()
             fig.add_trace(go.Box(
-                q1=[q1], median=[median], q3=[q3],
-                lowerfence=[min_v], upperfence=[max_v],
-                orientation='h', hoverinfo='skip',
-                fillcolor='lightpink', line=dict(color='purple')
-            ))
-            fig.update_layout(
-                xaxis=dict(
-                    showgrid=True, gridcolor='#d0d0d0', zeroline=False, dtick=5,
-                    ticks='outside', ticklen=8, tickwidth=1.5,
-                    minor=dict(dtick=1, ticks='outside', ticklen=4, tickcolor='#666', showgrid=True, gridcolor='#f2f2f2')
-                ),
-                yaxis=dict(showticklabels=False),
-                height=230, margin=dict(l=20, r=20, t=20, b=35),
-                plot_bgcolor='white', showlegend=False, hovermode=False
-            )
-            
-            fall = random.choice([
-                (f"Hur stor andel (i %) av observationerna har ett värde som är minst {q1}?", 75),
-                (f"Hur stor andel (i %) av observationerna har ett värde som är högst {q3}?", 75),
-                (f"Hur stor andel (i %) av observationerna ligger mellan {q1} och {q3}?", 50),
-                (f"Hur stor andel (i %) av observationerna har ett värde som är minst {q3}?", 25)
-            ])
-            return Uppgift(
-                info_text="Studera låddiagrammet nedan:",
-                plotly_fig=fig,
-                fraga=fall[0],
-                ratt_svar=fall[1],
-                input_typ="text",
-                svarstyp="procent",
-                suffix="%",
-                undertext="Tänk på hur stor andel av mätvärdena som ryms i varje del av låddiagrammet."
-            )
-        else:
-            med_a, iqr_a, vb_a = 30, 10, 26
-            med_b, iqr_b, vb_b = 35, 16, 20
-            if random.choice([True, False]):
-                med_a, iqr_a, vb_a, med_b, iqr_b, vb_b = med_b, iqr_b, vb_b, med_a, iqr_a, vb_a
-                
-            q1_a, q3_a = med_a - iqr_a // 2, med_a + iqr_a // 2
-            min_a = q1_a - (vb_a - iqr_a) // 2
-            max_a = min_a + vb_a
-            
-            q1_b, q3_b = med_b - iqr_b // 2, med_b + iqr_b // 2
-            min_b = q1_b - (vb_b - iqr_b) // 2
-            max_b = min_b + vb_b
-            
-            fig = go.Figure()
-            fig.add_trace(go.Box(
-                y=["Grupp B"], q1=[q1_b], median=[med_b], q3=[q3_b],
+                y=["Grupp B"],
+                q1=[q1_b], median=[med_b], q3=[q3_b],
                 lowerfence=[min_b], upperfence=[max_b],
                 orientation='h', hoverinfo='skip',
-                fillcolor='rgba(0, 86, 179, 0.25)', line=dict(color='#0056b3')
+                fillcolor='rgba(139, 0, 139, 0.25)', line=dict(color='#8B008B', width=2)
             ))
             fig.add_trace(go.Box(
-                y=["Grupp A"], q1=[q1_a], median=[med_a], q3=[q3_a],
+                y=["Grupp A"],
+                q1=[q1_a], median=[med_a], q3=[q3_a],
                 lowerfence=[min_a], upperfence=[max_a],
                 orientation='h', hoverinfo='skip',
-                fillcolor='lightpink', line=dict(color='purple')
+                fillcolor='rgba(0, 86, 179, 0.25)', line=dict(color='#0056b3', width=2)
             ))
+
+            x_min = max(0, min(min_a, min_b) - 3)
+            x_max = max(max_a, max_b) + 3
             fig.update_layout(
                 xaxis=dict(
-                    showgrid=True, gridcolor='#d0d0d0', zeroline=False, dtick=5,
-                    ticks='outside', ticklen=8, tickwidth=1.5,
-                    minor=dict(dtick=1, ticks='outside', ticklen=4, tickcolor='#666', showgrid=True, gridcolor='#f2f2f2')
+                    range=[x_min, x_max],
+                    showgrid=True,
+                    gridcolor='#d8d8d8',
+                    zeroline=False,
+                    dtick=5,
+                    minor=dict(dtick=1, ticklen=5, showgrid=True, gridcolor='#f0f0f0')
                 ),
-                height=290, margin=dict(l=20, r=20, t=20, b=35),
-                plot_bgcolor='white', showlegend=False, hovermode=False
+                yaxis=dict(tickfont=dict(size=14, color='black')),
+                height=280,
+                margin=dict(l=20, r=20, t=20, b=35),
+                plot_bgcolor='white',
+                showlegend=False,
+                hovermode=False
             )
-            
-            fraga_val = random.choice([
-                ("Vilken grupp har störst median?", "Grupp A" if med_a > med_b else "Grupp B"),
-                ("Vilken grupp har störst kvartilavstånd (IQR)?", "Grupp A" if iqr_a > iqr_b else "Grupp B"),
-                ("Vilken grupp har störst variationsbredd?", "Grupp A" if vb_a > vb_b else "Grupp B")
-            ])
+
             return Uppgift(
-                info_text="Jämför de två låddiagrammen:",
+                info_text="Jämför de två låddiagrammen för Grupp A och Grupp B:",
                 plotly_fig=fig,
-                fraga=fraga_val[0],
-                ratt_svar=fraga_val[1],
+                fraga=fraga,
+                ratt_svar=ratt,
                 alternativ=["Grupp A", "Grupp B"],
                 input_typ="radio",
-                svarstyp="string"
+                svarstyp="string",
+                undertext=tips
             )
+
+        elif typ == 'andel_antal_kvartil':
+            fig = _skapa_laddiagram_figur(min_v, q1, median, q3, max_v)
+            n_tot = random.choice([80, 120, 160, 200])
+            fall = random.choice([
+                (f"ett värde större än {q3}", 0.25),
+                (f"ett värde mindre än {q1}", 0.25),
+                (f"ett värde mellan {q1} och {q3}", 0.50),
+                (f"ett värde större än {median}", 0.50),
+            ])
+            villkor_txt, andel = fall
+            ratt = int(round(n_tot * andel))
+
+            return Uppgift(
+                info_text=f"Låddiagrammet sammanfattar en undersökning med totalt {n_tot} mätvärden (inga värden sammanfaller med kvartilgränserna):",
+                plotly_fig=fig,
+                fraga=f"Ungefär hur många av de {n_tot} mätvärdena har {villkor_txt}?",
+                ratt_svar=ratt,
+                input_typ="text",
+                svarstyp="int",
+                suffix="st",
+                undertext="Varje delintervall i ett låddiagram motsvarar 25 % av observationerna."
+            )
+
+        else:  # talmangd_kvartiler (7 eller 11 värden så att Q1, median och Q3 blir exakta heltal)
+            n_tal = random.choice([7, 11])
+            start = random.randint(8, 18)
+            sorterade = [start]
+            for _ in range(n_tal - 1):
+                sorterade.append(sorterade[-1] + random.randint(1, 4))
+
+            if n_tal == 7:
+                q1_val, med_val, q3_val = sorterade[1], sorterade[3], sorterade[5]
+            else:
+                q1_val, med_val, q3_val = sorterade[2], sorterade[5], sorterade[8]
+
+            blandade = sorterade[:]
+            while blandade == sorterade:
+                random.shuffle(blandade)
+
+            tal_str = ", ".join(str(x) for x in blandade)
+
+            if random.choice(['alla_tre', 'iqr']) == 'alla_tre':
+                return Uppgift(
+                    info_box_text=f"Mätvärden: {tal_str}",
+                    info_box_style="pink",
+                    fraga="Bestäm nedre kvartil (Q₁), median och övre kvartil (Q₃) för datamängden:",
+                    ratt_svar=[float(q1_val), float(med_val), float(q3_val)],
+                    input_typ="flera_text",
+                    svarstyp="ordered_float",
+                    flera_labels=["Nedre kvartil (Q₁) =", "Median =", "Övre kvartil (Q₃) ="],
+                    undertext="Börja med att storleksordna talen från minst till störst."
+                )
+            else:
+                return Uppgift(
+                    info_box_text=f"Mätvärden: {tal_str}",
+                    info_box_style="pink",
+                    fraga="Beräkna kvartilavståndet (IQR) för datamängden:",
+                    ratt_svar=q3_val - q1_val,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Storleksordna talen, bestäm Q₁ och Q₃ och beräkna Q₃ − Q₁."
+                )
