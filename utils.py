@@ -31,8 +31,19 @@ def _rensa_enhet(s: str) -> str:
 
 
 def _tolka_tal(s: str) -> float:
-    """Tolkar decimaltal, heltal och bråk (t.ex. 3/2) till float."""
-    s_clean = _rensa_enhet(str(s)).replace(",", ".")
+    """Tolkar decimaltal, heltal och bråk (t.ex. 3/2) till float. Avvisar blandade bråk (t.ex. 1 1/2)."""
+    s_raw = str(s).replace("\xa0", " ").strip()
+    s_utan_enhet = re.sub(
+        r'\s*(kr|st|cm|mm|dm|m|g|kg|l\.e\.|a\.e\.|timmar|tim|poäng|p|%)$',
+        '',
+        s_raw,
+        flags=re.IGNORECASE
+    ).strip()
+
+    if re.search(r'\d\s+\d', s_utan_enhet):
+        raise ValueError("Blandad form (t.ex. 1 1/2) stöds inte; använd bråkform (3/2) eller decimaltal (1,5)")
+
+    s_clean = _rensa_enhet(s_utan_enhet).replace(",", ".")
     if not s_clean or len(s_clean) > 40:
         raise ValueError("Ogiltigt tal")
 
@@ -114,6 +125,12 @@ def formatera_facit_text(u: Uppgift) -> str:
     if u.svarstyp in ['ekvationssystem', 'punkt']:
         return f"x = {u.ratt_svar[0]:g}, y = {u.ratt_svar[1]:g}".replace('.', ',')
     elif u.svarstyp == 'ordered_float':
+        if u.flera_labels and len(u.flera_labels) == len(u.ratt_svar):
+            delar = []
+            for lbl, val in zip(u.flera_labels, u.ratt_svar):
+                ren_lbl = lbl.replace("=", "").strip()
+                delar.append(f"{ren_lbl} = {val:g}".replace('.', ','))
+            return ", ".join(delar)
         return f"μ = {u.ratt_svar[0]:g}, σ = {u.ratt_svar[1]:g}".replace('.', ',')
     elif u.svarstyp == 'array_float':
         return ' och '.join([f"{a:g}".replace('.', ',') for a in u.ratt_svar])
@@ -196,7 +213,7 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
                 ratt_clean = _forbered_matte_strang(str(u.ratt_svar))
                 if svar_clean == ratt_clean:
                     return 'ratt'
-                svar_no_paren = re.sub(r'\*\*\((\-?\d+)\)', r'**\1', svar_clean)
+                svar_no_paren = re.sub(r'\*\*\(\s*(\-?\d+)\s*\)', r'**\1', svar_clean)
                 if svar_no_paren == ratt_clean:
                     return 'ratt'
                 expr_elev = _saker_parse_expr(svar_clean)
@@ -218,8 +235,10 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
                     return 'fel'
 
                 if u.krav_inga_parenteser:
-                    s_utan_neg_exp = re.sub(r'\*\*\(-\d+\)', '', svar_clean)
-                    if '(' in s_utan_neg_exp or ')' in s_utan_neg_exp:
+                    s_kontroll = re.sub(r'\*\*\(\s*-\s*\d+\s*\)', '', svar_clean)
+                    # Tillåt grupperingsparentes runt ett ensamt monom i nämnaren, t.ex. 1/(x^2) eller 1/(2x^3)
+                    s_kontroll = re.sub(r'/\(\s*(\d*\*?[a-zA-Z](?:\*\*\d+)?|\d+)\s*\)', r'/\1', s_kontroll)
+                    if '(' in s_kontroll or ')' in s_kontroll:
                         return 'ej_forenklad'
 
                 _, den_e = fraction(together(expr_elev))
