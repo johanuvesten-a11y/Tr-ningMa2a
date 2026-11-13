@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from models import Uppgift
 
 def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
-    """Normalfördelning enligt Skolverkets formelblad."""
+    """Normalfördelning enligt Skolverkets formelblad (34,1 % | 13,6 % | 2,3 %)."""
     scenarier = [
         {"namn": "längden på vuxna män", "enhet": "cm", "mu": random.choice([175, 180]), "sigma": random.choice([5, 10])},
         {"namn": "vikten på nyfödda bebisar", "enhet": "g", "mu": random.choice([3500, 3600]), "sigma": random.choice([400, 500])},
@@ -15,7 +15,7 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
     mu, sigma = sc["mu"], sc["sigma"]
     
     if niva == 1:
-        fraga_typ = random.choice(['mellersta_68', 'mellersta_95', 'procent_over_2sigma', 'jamfor_kurvor'])
+        fraga_typ = random.choice(['mellersta_68', 'mellersta_95', 'halva_68', 'svans_2sigma', 'jamfor_kurvor'])
         
         if fraga_typ == 'jamfor_kurvor':
             aspekt = random.choice(['mu', 'sigma'])
@@ -72,15 +72,38 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
             sub_text = "Avgör hur många standardavvikelser från medelvärdet intervallet omfattar och se formelbladet."
             fill_range = (v_low, v_high)
-        else:
-            v_high = mu + 2 * sigma
+        elif fraga_typ == 'halva_68':
+            if random.choice(['over', 'under']) == 'over':
+                v_low, v_high = mu, mu + sigma
+            else:
+                v_low, v_high = mu - sigma, mu
+            ratt_svar = 34.1
+            fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
+            sub_text = "Läs av motsvarande delområde direkt i normalfördelningskurvan på formelbladet."
+            fill_range = (v_low, v_high)
+        else:  # svans_2sigma
+            if random.choice(['over', 'under']) == 'over':
+                v_high = mu + 2 * sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara större än {v_high} {sc['enhet']}?"
+                fill_range = (v_high, mu + 4 * sigma)
+            else:
+                v_low = mu - 2 * sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara mindre än {v_low} {sc['enhet']}?"
+                fill_range = (mu - 4 * sigma, v_low)
             ratt_svar = 2.3
-            fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara större än {v_high} {sc['enhet']}?"
             sub_text = "Ta hjälp av normalfördelningskurvan på formelbladet."
-            fill_range = (v_high, mu + 4 * sigma)
             
     else:  # Nivå 2
-        fraga_typ = random.choice(['mellan_1_och_2_sigma', 'under_plus_2sigma', 'mellan_minus1_och_plus2', 'antal_personer', 'baklanges_mu_sigma'])
+        fraga_typ = random.choice([
+            'kumulativ_1sigma',       # 84,1 %
+            'svans_1sigma',           # 15,9 %
+            'mellan_1_och_2_sigma',   # 13,6 %
+            'halva_95',               # 47,7 %
+            'kumulativ_2sigma',       # 97,7 %
+            'asymmetrisk_81_8',       # 81,8 %
+            'antal_observationer',
+            'baklanges_mu_sigma'
+        ])
         
         if fraga_typ == 'baklanges_mu_sigma':
             typ_int = random.choice([1, 2])
@@ -98,35 +121,88 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 undertext="Utgå från normalfördelningskurvans symmetri och formelbladets procentsatser."
             )
             
-        if fraga_typ == 'mellan_1_och_2_sigma':
-            v_low, v_high = mu + sigma, mu + 2 * sigma
+        if fraga_typ == 'kumulativ_1sigma':
+            ratt_svar = 84.1
+            if random.choice(['mindre', 'storre']) == 'mindre':
+                grans = mu + sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara MINDRE än {grans} {sc['enhet']}?"
+                fill_range = (mu - 4 * sigma, grans)
+            else:
+                grans = mu - sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara STÖRRE än {grans} {sc['enhet']}?"
+                fill_range = (grans, mu + 4 * sigma)
+            sub_text = "Utnyttja att 50 % ligger på ena sidan om medelvärdet μ och lägg till delområdet från formelbladet."
+
+        elif fraga_typ == 'svans_1sigma':
+            ratt_svar = 15.9
+            if random.choice(['storre', 'mindre']) == 'storre':
+                grans = mu + sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara STÖRRE än {grans} {sc['enhet']}?"
+                fill_range = (grans, mu + 4 * sigma)
+            else:
+                grans = mu - sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara MINDRE än {grans} {sc['enhet']}?"
+                fill_range = (mu - 4 * sigma, grans)
+            sub_text = "Summera de två yttersta delområdena på formelbladet (eller räkna 50 % minus 34,1 %)."
+
+        elif fraga_typ == 'mellan_1_och_2_sigma':
             ratt_svar = 13.6
+            if random.choice(['over', 'under']) == 'over':
+                v_low, v_high = mu + sigma, mu + 2 * sigma
+            else:
+                v_low, v_high = mu - 2 * sigma, mu - sigma
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga i intervallet från {v_low} {sc['enhet']} till {v_high} {sc['enhet']}?"
             sub_text = "Bestäm hur många standardavvikelser från medelvärdet gränserna ligger och läs av på formelbladet."
             fill_range = (v_low, v_high)
-        elif fraga_typ == 'under_plus_2sigma':
-            v_high = mu + 2 * sigma
+
+        elif fraga_typ == 'halva_95':
+            ratt_svar = 47.7
+            if random.choice(['over', 'under']) == 'over':
+                v_low, v_high = mu, mu + 2 * sigma
+            else:
+                v_low, v_high = mu - 2 * sigma, mu
+            fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
+            sub_text = "Summera de två delområdena mellan medelvärdet μ och gränsen på formelbladet."
+            fill_range = (v_low, v_high)
+
+        elif fraga_typ == 'kumulativ_2sigma':
             ratt_svar = 97.7
-            fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara MINDRE än {v_high} {sc['enhet']}?"
+            if random.choice(['mindre', 'storre']) == 'mindre':
+                grans = mu + 2 * sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara MINDRE än {grans} {sc['enhet']}?"
+                fill_range = (mu - 4 * sigma, grans)
+            else:
+                grans = mu - 2 * sigma
+                fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas vara STÖRRE än {grans} {sc['enhet']}?"
+                fill_range = (grans, mu + 4 * sigma)
             sub_text = "Utnyttja att kurvan är symmetrisk kring medelvärdet μ och läs av delområdena på formelbladet."
-            fill_range = (mu - 4 * sigma, v_high)
-        elif fraga_typ == 'mellan_minus1_och_plus2':
-            v_low, v_high = mu - sigma, mu + 2 * sigma
+
+        elif fraga_typ == 'asymmetrisk_81_8':
             ratt_svar = 81.8
+            if random.choice(['m1_p2', 'm2_p1']) == 'm1_p2':
+                v_low, v_high = mu - sigma, mu + 2 * sigma
+            else:
+                v_low, v_high = mu - 2 * sigma, mu + sigma
             fraga = f"Hur stor andel (i %) av {sc['namn']} förväntas ligga mellan {v_low} {sc['enhet']} och {v_high} {sc['enhet']}?"
             sub_text = "Dela upp intervallet vid medelvärdet μ och läs av delområdena på formelbladet."
             fill_range = (v_low, v_high)
-        else:
+
+        else:  # antal_observationer
             n_tot = random.choice([1000, 2000, 3000, 5000])
-            v_high = mu + 2 * sigma
-            ratt_svar = int(round(n_tot * 0.023))
+            antal_fall = random.choice([
+                (f"ha ett värde större än {mu + 2 * sigma} {sc['enhet']}", 2.3, (mu + 2 * sigma, mu + 4 * sigma)),
+                (f"ha ett värde större än {mu + sigma} {sc['enhet']}", 15.9, (mu + sigma, mu + 4 * sigma)),
+                (f"ha ett värde mindre än {mu + sigma} {sc['enhet']}", 84.1, (mu - 4 * sigma, mu + sigma)),
+                (f"ligga mellan {mu + sigma} {sc['enhet']} och {mu + 2 * sigma} {sc['enhet']}", 13.6, (mu + sigma, mu + 2 * sigma))
+            ])
+            villkor_text, pct, fill_range = antal_fall
+            ratt_svar = int(round(n_tot * (pct / 100.0)))
             fraga = (
                 f"I en undersökning ingår {n_tot} observationer där {sc['namn']} är normalfördelad "
                 f"med μ = {mu} {sc['enhet']} och σ = {sigma} {sc['enhet']}. "
-                f"Hur många observationer förväntas ha ett värde större än {v_high} {sc['enhet']}?"
+                f"Hur många observationer förväntas {villkor_text}?"
             )
             sub_text = "Bestäm först hur många procent som ligger i det markerade området med hjälp av formelbladet."
-            fill_range = (v_high, mu + 4 * sigma)
 
     x_vals = np.linspace(mu - 4 * sigma, mu + 4 * sigma, 300)
     y_vals = (1 / (sigma * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_vals - mu) / sigma) ** 2)
