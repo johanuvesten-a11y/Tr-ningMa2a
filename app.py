@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 from models import Uppgift
-from utils import ratta_svar, visa_infobox
+from utils import ratta_svar, visa_infobox, formatera_facit_text
 from generators.algebra import (
     skapa_potensregler_uppgift,
     skapa_kvadrering_konjugat_uppgift,
@@ -27,10 +27,6 @@ input[type="text"] {
     font-weight: bold !important;
     text-align: center !important;
 }
-.katex-display {
-    padding: 0.5em 0 !important;
-    overflow-y: visible !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -48,14 +44,15 @@ KATEGORIER = {
     "Låddiagram & Kvartiler": skapa_laddiagram_uppgift
 }
 
+
 def generera_ny_uppgift():
     st.session_state.rattat = False
     st.session_state.svar_status = None
     st.session_state.uppgift_id = st.session_state.get('uppgift_id', 0) + 1
-    
+
     kat = st.session_state.aktuell_kategori
     niva = st.session_state.niva
-    
+
     if kat == "Blandat (Slumpas)":
         val_kat = random.choice(list(KATEGORIER.keys()))
         u = KATEGORIER[val_kat](niva)
@@ -63,20 +60,22 @@ def generera_ny_uppgift():
     else:
         u = KATEGORIER[kat](niva)
         u.visnings_kategori = kat
-        
+
     st.session_state.aktiv_uppgift = u
+
 
 def hantera_svar():
     st.session_state.rattat = True
     u = st.session_state.aktiv_uppgift
     uid = st.session_state.uppgift_id
-    
+
     if u.input_typ == 'flera_text':
         input_svar = [st.session_state.get(f"input_{uid}_{i}", "") for i in range(len(u.ratt_svar))]
     else:
         input_svar = st.session_state.get(f"input_single_{uid}")
-        
+
     st.session_state.svar_status = ratta_svar(u, input_svar)
+
 
 # Menystyrning
 st.sidebar.title("Matematik 2a")
@@ -117,13 +116,13 @@ with col_h:
     st.subheader("Uppgift")
     if u.undertext:
         st.markdown(f"<p style='font-size: 14px; color: #666;'><i>{u.undertext}</i></p>", unsafe_allow_html=True)
-        
+
     st.markdown(f"<div style='font-size: 22px; font-weight: bold; color: #0056b3; margin-bottom: 20px;'>{u.fraga}</div>", unsafe_allow_html=True)
-    
+
     uid = st.session_state.uppgift_id
     rattat = st.session_state.get('rattat', False)
     status = st.session_state.get('svar_status', None)
-    
+
     if rattat and status == 'ratt':
         st.success("✅ Helt rätt! Snyggt jobbat.")
         if st.button("Nästa uppgift", type="primary", use_container_width=True, key=f"next_{uid}"):
@@ -145,21 +144,12 @@ with col_h:
                 st.text_input(label_txt, key=f"input_single_{uid}")
             elif u.input_typ == 'radio':
                 st.radio("Alternativ:", u.alternativ, index=None, key=f"input_single_{uid}")
-            
+
             st.form_submit_button("Rätta svar", use_container_width=True, on_click=hantera_svar)
-            
+
         if rattat and status != 'ratt':
             if status == 'fel':
-                if u.svarstyp in ['ekvationssystem', 'punkt']:
-                    ratt_txt = f"x = {u.ratt_svar[0]:g}, y = {u.ratt_svar[1]:g}".replace('.', ',')
-                elif u.svarstyp == 'ordered_float':
-                    ratt_txt = f"μ = {u.ratt_svar[0]:g}, σ = {u.ratt_svar[1]:g}".replace('.', ',')
-                elif u.svarstyp == 'array_float':
-                    ratt_txt = ' och '.join([f"{a:g}".replace('.', ',') for a in u.ratt_svar])
-                elif isinstance(u.ratt_svar, float):
-                    ratt_txt = f"{u.ratt_svar:g}".replace('.', ',')
-                else:
-                    ratt_txt = str(u.ratt_svar)
+                ratt_txt = formatera_facit_text(u)
                 enhet_str = f" {u.suffix}" if u.suffix else ""
                 st.error(f"❌ Tyvärr fel. Rätt svar var: {ratt_txt}{enhet_str}")
             elif status == 'format_saknar_x':
@@ -168,11 +158,13 @@ with col_h:
                 st.warning("⚠️ Räta linjens ekvation måste börja med y =, t.ex. y = 2x - 3.")
             elif status == 'ej_forenklad':
                 st.warning("⚠️ Ditt uttryck är matematiskt lika men inte färdigutvecklat eller förkortat. Utveckla parenteser och förkorta så långt som möjligt.")
+            elif status == 'ej_faktoriserad':
+                st.warning("⚠️ Ditt uttryck stämmer, men det är inte färdigfaktoriserat. Bryt ut största möjliga faktor och faktorisera så långt som möjligt.")
             elif status == 'format':
                 st.warning("⚠️ Felaktigt format på svaret.")
             elif status == 'tom':
                 st.warning("⚠️ Fyll i ett svar innan du rättar.")
-                
+
             if st.button("Hoppa över / Nästa uppgift", use_container_width=True, key=f"skip_{uid}"):
                 generera_ny_uppgift()
                 st.rerun()
