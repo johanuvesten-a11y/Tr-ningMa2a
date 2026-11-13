@@ -1,3 +1,4 @@
+import math
 import random
 import numpy as np
 import plotly.graph_objects as go
@@ -225,36 +226,25 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
             )
 
 def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
-    """Kvadrerings- och konjugatreglerna."""
+    """Kvadrerings- och konjugatreglerna: Nivå 1 (utveckling & enklare kombinationer), Nivå 2 (koefficienter, ekvationer, okänd konstant, faktorisering, huvudräkning)."""
     if niva == 1:
-        a = random.randint(2, 8)
-        typ = random.choice(['kvad1', 'kvad2', 'konjugat'])
+        typ = random.choice(['kvad1', 'kvad2', 'konjugat', 'kvad_minus_konj', 'koeff_minus_kvad', 'tva_kvadrater'])
         if typ == 'kvad1':
+            a = random.randint(2, 8)
             uttryck = f"(x + {a})^2"
             svar = formatera_polynom([(1, 'x^2'), (2*a, 'x'), (a**2, '')])
             tips = "Använd första kvadreringsregeln: (a + b)² = a² + 2ab + b²."
         elif typ == 'kvad2':
+            a = random.randint(2, 8)
             uttryck = f"(x - {a})^2"
             svar = formatera_polynom([(1, 'x^2'), (-2*a, 'x'), (a**2, '')])
             tips = "Använd andra kvadreringsregeln: (a - b)² = a² - 2ab + b²."
-        else:
+        elif typ == 'konjugat':
+            a = random.randint(2, 8)
             uttryck = f"(x + {a})(x - {a})"
             svar = formatera_polynom([(1, 'x^2'), (-a**2, '')])
             tips = "Använd konjugatregeln: (a + b)(a - b) = a² - b²."
-            
-        return Uppgift(
-            info_text="Utveckla och förenkla uttrycket:",
-            latex_text=uttryck,
-            fraga="Skriv det utvecklade uttrycket:",
-            ratt_svar=svar,
-            input_typ="text",
-            svarstyp="string_math",
-            undertext=tips,
-            krav_inga_parenteser=True
-        )
-    else:
-        typ = random.choice(['kvad_minus_konj', 'koeff_minus_kvad', 'tva_kvadrater'])
-        if typ == 'kvad_minus_konj':
+        elif typ == 'kvad_minus_konj':
             a = random.randint(2, 6)
             b = random.randint(2, 6)
             uttryck = f"(x + {a})^2 - (x - {b})(x + {b})"
@@ -282,6 +272,158 @@ def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
             undertext=tips,
             krav_inga_parenteser=True
         )
+    else:
+        typ = random.choice([
+            'yttre_koeff_omvand',
+            'ekvation_kvad_konj',
+            'okand_konstant',
+            'faktorisering_tva_steg',
+            'smart_huvudrakning'
+        ])
+        
+        if typ == 'yttre_koeff_omvand':
+            if random.choice(['yttre_koeff', 'omvand_ordning']) == 'yttre_koeff':
+                c = random.choice([2, 3])
+                k = random.choice([2, 3])
+                a = random.randint(1, 3)
+                m = random.choice([2, 3])
+                b = random.randint(1, 4)
+                uttryck = f"{c}({k}x - {a})^2 - ({m}x - {b})({m}x + {b})"
+                koeff_x2 = c * (k**2) - (m**2)
+                koeff_x = -2 * c * k * a
+                konst = c * (a**2) + (b**2)
+                svar = formatera_polynom([(koeff_x2, 'x^2'), (koeff_x, 'x'), (konst, '')])
+                tips = f"Utveckla ({k}x - {a})² först innan du multiplicerar in {c}, och var noga med minustecknet."
+            else:
+                a = random.randint(2, 6)
+                k = random.choice([2, 3])
+                uttryck = f"({a} - {k}x)^2 - ({a} + {k}x)({k}x - {a})"
+                svar = formatera_polynom([(-2 * a * k, 'x'), (2 * (a**2), '')])
+                tips = f"Observera ordningen på termerna i ({a} + {k}x)({k}x - {a}) innan du använder konjugatregeln."
+                
+            return Uppgift(
+                info_text="Utveckla och förenkla uttrycket så långt som möjligt:",
+                latex_text=uttryck,
+                fraga="Ange det förenklade uttrycket:",
+                ratt_svar=svar,
+                input_typ="text",
+                svarstyp="string_math",
+                undertext=tips,
+                krav_inga_parenteser=True
+            )
+            
+        elif typ == 'ekvation_kvad_konj':
+            x_sol = random.choice([-5, -4, -3, -2, -1, 1, 2, 3, 4, 5])
+            if random.choice(['variant_a', 'variant_b']) == 'variant_a':
+                a = random.randint(2, 6)
+                b = random.choice([-4, -3, -2, 2, 3, 4])
+                c = -(a**2) - (b**2) - 2 * b * x_sol
+                par_b = f"(x + {b})^2" if b > 0 else f"(x - {abs(b)})^2"
+                hl = par_b if c == 0 else (f"{par_b} + {c}" if c > 0 else f"{par_b} - {abs(c)}")
+                ekv_str = f"(x + {a})(x - {a}) = {hl}"
+            else:
+                k = random.choice([2, 3])
+                a = random.randint(1, 4)
+                b = random.randint(1, 5)
+                hl = -2 * a * k * x_sol + (a**2) + (b**2)
+                ekv_str = f"({k}x - {a})^2 - ({k}x + {b})({k}x - {b}) = {hl}"
+                
+            return Uppgift(
+                info_text="Lös ekvationen algebraiskt:",
+                latex_text=ekv_str,
+                fraga="Ange värdet på x:",
+                ratt_svar=x_sol,
+                input_typ="text",
+                svarstyp="int",
+                undertext="Utveckla parenteserna med konjugat- och kvadreringsregeln och förenkla."
+            )
+            
+        elif typ == 'okand_konstant':
+            if random.choice(['konst_a_pos', 'konst_a_diff']) == 'konst_a_pos':
+                k = random.choice([1, 2, 3])
+                a = random.randint(2, 7)
+                kx_str = "x" if k == 1 else f"{k}x"
+                k2x2_str = "x^2" if k == 1 else f"{k**2}x^2"
+                uttryck = f"({kx_str} + a)^2 - {k2x2_str}"
+                forenklat = formatera_polynom([(2 * a * k, 'x'), (a**2, '')])
+                return Uppgift(
+                    info_text=f"Uttrycket nedan kan förenklas till {forenklat}:",
+                    latex_text=uttryck,
+                    fraga="Bestäm det positiva talet a:",
+                    ratt_svar=a,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Utveckla vänsterledet med kvadreringsregeln och jämför termerna."
+                )
+            else:
+                a = random.randint(2, 7)
+                b = random.choice([x for x in range(1, 6) if x != a])
+                uttryck = f"(x + a)^2 - (x - {b})^2"
+                forenklat = formatera_polynom([(2 * a + 2 * b, 'x'), (a**2 - b**2, '')])
+                return Uppgift(
+                    info_text=f"För ett visst värde på konstanten a gäller att uttrycket nedan är lika med {forenklat}:",
+                    latex_text=uttryck,
+                    fraga="Bestäm värdet på konstanten a:",
+                    ratt_svar=a,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Utveckla båda parenteserna och jämför koefficienten framför x."
+                )
+                
+        elif typ == 'faktorisering_tva_steg':
+            if random.choice(['utbryt_konj', 'kvad_baklanges']) == 'utbryt_konj':
+                k = random.choice([2, 3, 4, 5])
+                a = random.randint(2, 7)
+                uttryck = formatera_polynom([(k, 'x^2'), (-k * (a**2), '')])
+                svar = f"{k}*(x - {a})*(x + {a})"
+                tips = f"Bryt först ut den gemensamma faktorn {k} och använd sedan konjugatregeln baklänges."
+            else:
+                k = random.choice([2, 3])
+                a = random.choice([x for x in range(1, 6) if math.gcd(k, x) == 1])
+                tecken = random.choice([1, -1])
+                uttryck = formatera_polynom([(k**2, 'x^2'), (tecken * 2 * k * a, 'x'), (a**2, '')])
+                svar = f"({k}x + {a})^2" if tecken > 0 else f"({k}x - {a})^2"
+                tips = "Använd kvadreringsregeln baklänges."
+                
+            return Uppgift(
+                info_text="Faktorisera uttrycket så långt som möjligt:",
+                latex_text=uttryck,
+                fraga="Skriv det faktoriserade uttrycket:",
+                ratt_svar=svar,
+                input_typ="text",
+                svarstyp="faktoriserad",
+                undertext=tips
+            )
+            
+        else:  # smart_huvudrakning
+            if random.choice(['ab_varde', 'tal_kvadrater']) == 'ab_varde':
+                s = random.randint(11, 25)
+                d = random.randint(3, 9)
+                ratt = s * d
+                return Uppgift(
+                    info_box_text=f"Talen a och b uppfyller att a + b = {s} och a - b = {d}.",
+                    info_box_style="blue",
+                    fraga="Beräkna värdet av a² - b²:",
+                    ratt_svar=ratt,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Skriv om a² - b² med hjälp av konjugatregeln."
+                )
+            else:
+                mitt = random.choice([50, 100, 200])
+                diff = random.choice([2, 3, 4, 5])
+                x_val = mitt + diff
+                y_val = mitt - diff
+                ratt = (x_val + y_val) * (x_val - y_val)
+                return Uppgift(
+                    info_text="Beräkna värdet av uttrycket med hjälp av konjugatregeln:",
+                    latex_text=f"{x_val}^2 - {y_val}^2",
+                    fraga="Ange uttryckets värde:",
+                    ratt_svar=ratt,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Faktorisera uttrycket med konjugatregeln a² - b² = (a + b)(a - b)."
+                )
 
 def skapa_rationella_uttryck_uppgift(niva: int) -> Uppgift:
     """Förenkling av rationella uttryck med konjugat- och kvadreringsreglerna."""
