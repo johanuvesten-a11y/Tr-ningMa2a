@@ -100,6 +100,24 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
                 if simplify(expr_elev - expr_facit) == 0:
                     return 'ej_forenklad'
                 return 'fel'
+
+            elif u.svarstyp == 'faktoriserad':
+                svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("\xa0", "").replace("^", "**")
+                ratt_clean = str(u.ratt_svar).replace(" ", "").replace("^", "**")
+                transformations = standard_transformations + (implicit_multiplication_application,)
+                expr_elev = parse_expr(svar_clean, transformations=transformations)
+                expr_facit = parse_expr(ratt_clean, transformations=transformations)
+                if simplify(expr_elev - expr_facit) != 0:
+                    return 'fel'
+                if '**2' in ratt_clean:
+                    if '(' not in svar_clean or ')' not in svar_clean:
+                        return 'ej_forenklad'
+                    if '**2' not in svar_clean and svar_clean.count('(') < 2:
+                        return 'ej_forenklad'
+                else:
+                    if svar_clean.count('(') < ratt_clean.count('('):
+                        return 'ej_forenklad'
+                return 'ratt'
                 
             elif u.svarstyp == 'string_math':
                 svar_clean = svar_str.replace(",", ".").replace(" ", "").replace("\xa0", "").replace("^", "**")
