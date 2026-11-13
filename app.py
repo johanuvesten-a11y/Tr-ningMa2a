@@ -132,18 +132,24 @@ with col_h:
         with st.form(key=f"form_{uid}"):
             if u.input_typ == 'flera_text':
                 if u.flera_labels:
-                    labels = u.flera_labels
+                    labels = list(u.flera_labels)
                 elif u.svarstyp in ['ekvationssystem', 'punkt']:
                     labels = ["x =", "y ="]
                 else:
                     labels = [f"Svar {i+1}:" for i in range(len(u.ratt_svar))]
                 for i in range(len(u.ratt_svar)):
-                    st.text_input(labels[i], key=f"input_{uid}_{i}")
+                    lbl = labels[i]
+                    if u.suffix and f"({u.suffix})" not in lbl:
+                        lbl = f"{lbl.rstrip(' =:')} ({u.suffix}):"
+                    st.text_input(lbl, key=f"input_{uid}_{i}")
             elif u.input_typ == 'text':
                 label_txt = f"Ditt svar ({u.suffix}):" if u.suffix else "Ditt svar:"
                 st.text_input(label_txt, key=f"input_single_{uid}")
             elif u.input_typ == 'radio':
                 st.radio("Alternativ:", u.alternativ, index=None, key=f"input_single_{uid}")
+
+            if u.suffix and u.input_typ in ['text', 'flera_text']:
+                st.caption(f"Ange siffervärdet i {u.suffix} (du behöver inte skriva ut enheten).")
 
             st.form_submit_button("Rätta svar", use_container_width=True, on_click=hantera_svar)
 
@@ -161,7 +167,7 @@ with col_h:
             elif status == 'ej_faktoriserad':
                 st.warning("⚠️ Ditt uttryck stämmer, men det är inte färdigfaktoriserat. Bryt ut största möjliga faktor och faktorisera så långt som möjligt.")
             elif status == 'format':
-                st.warning("⚠️ Felaktigt format på svaret.")
+                st.warning("⚠️ Felaktigt format på svaret. Skriv eventuella bråk som t.ex. 3/2 eller i decimalform (1,5) i stället för blandad form.")
             elif status == 'tom':
                 st.warning("⚠️ Fyll i ett svar innan du rättar.")
 
