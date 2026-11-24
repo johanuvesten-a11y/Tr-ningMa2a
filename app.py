@@ -122,8 +122,7 @@ with col_h:
     if u.undertext:
         st.markdown(f"<p style='font-size: 14px; color: #666;'><i>{u.undertext}</i></p>", unsafe_allow_html=True)
 
-    st.markdown(f"<div style='font-size: 22px; font-weight: bold; color: #0056b3; margin-bottom: 20px;'>{u.fraga}</div>", unsafe_allow_html=True)
-
+    st.markdown(f"<div style='font-size: 22px; font-weight: bold; color: #0056b3; margin-bottom: 20px;'>{formatera_html_matte(u.fraga)}</div>", unsafe_allow_html=True)
     uid = st.session_state.uppgift_id
     rattat = st.session_state.get('rattat', False)
     status = st.session_state.get('svar_status', None)
