@@ -1,7 +1,7 @@
 import streamlit as st
 import random
 from models import Uppgift
-from utils import ratta_svar, visa_infobox, formatera_facit_text
+from utils import ratta_svar, visa_infobox, formatera_facit_text, formatera_html_matte
 from generators.algebra import (
     skapa_potensregler_uppgift,
     skapa_kvadrering_konjugat_uppgift,
@@ -111,7 +111,7 @@ with col_v:
     if u.plotly_fig is not None:
         st.plotly_chart(u.plotly_fig, use_container_width=True, config={'displayModeBar': False})
     if u.info_text:
-        st.markdown(f"<div style='font-size: 18px; color: #555;'>{u.info_text}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 18px; color: #555;'>{formatera_html_matte(u.info_text)}</div>", unsafe_allow_html=True)
     if u.latex_text:
         st.latex(u.latex_text)
     if u.info_box_text and u.info_box_style:
