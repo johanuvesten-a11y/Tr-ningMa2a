@@ -263,6 +263,57 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
 
     return 'fel'
 
+def formatera_html_matte(text: str) -> str:
+    """Konverterar inline-LaTeX ($...$) till HTML så att det visas snyggt inuti div-taggar."""
+    if not text or "$" not in text:
+        return text
+
+    def ersatt_matte(match):
+        m = match.group(1)
+        ersattningar = [
+            (r'\\cdot', '·'),
+            (r'\\times', '×'),
+            (r'\\pm', '±'),
+            (r'\\leq|\\le', '≤'),
+            (r'\\geq|\\ge', '≥'),
+            (r'\\neq', '≠'),
+            (r'\\approx', '≈'),
+            (r'\\mu', 'μ'),
+            (r'\\sigma', 'σ'),
+            (r'\\pi', 'π'),
+            (r'\\sqrt\{([^}]*)\}', r'√(\1)'),
+            (r'\\frac\{([^}]*)\}\{([^}]*)\}', r'(\1)/(\2)'),
+        ]
+        for monster, ers in ersattningar:
+            m = re.sub(monster, ers, m)
+
+        m = re.sub(r'\^\{([^}]+)\}', r'<sup>\1</sup>', m)
+        m = re.sub(r'\^([a-zA-Z0-9+-]+)', r'<sup>\1</sup>', m)
+        m = re.sub(r'_\{([^}]+)\}', r'<sub>\1</sub>', m)
+        m = re.sub(r'_([a-zA-Z0-9]+)', r'<sub>\1</sub>', m)
+
+        delar = re.split(r'(<[^>]+>)', m)
+        for i in range(0, len(delar), 2):
+            delar[i] = re.sub(r'([a-zA-Z]+)', r'<i>\1</i>', delar[i])
+        return "".join(delar)
+
+    return re.sub(r'\$([^$]+?)\$', ersatt_matte, text)
+
+
+def visa_infobox(text: str, style: str):
+    colors = {
+        'blue': ('#0056b3', '#f8f9fa'),
+        'green': ('#28a745', '#e9ecef'),
+        'purple': ('#8B008B', '#f3e5f5'),
+        'pink': ('#e83e8c', '#fce4ec')
+    }
+    border_color, bg_color = colors.get(style, ('#333', '#f4f4f4'))
+    formaterad_text = formatera_html_matte(text)
+    st.markdown(
+        f"<div style='font-size: 20px; font-weight: bold; color: #333; margin-top: 20px; "
+        f"background-color: {bg_color}; padding: 20px; border-radius: 10px; border-left: 6px solid {border_color};'>"
+        f"{formaterad_text}</div>", unsafe_allow_html=True
+    )
 
 def visa_infobox(text: str, style: str):
     colors = {
