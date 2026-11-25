@@ -373,7 +373,7 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
 
             random.shuffle(alts)
             return Uppgift(
-                info_text=NONE,
+                info_text=None,
                 plotly_fig=fig,
                 fraga=fraga_txt,
                 ratt_svar=ratt_svar,
