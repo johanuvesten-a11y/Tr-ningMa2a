@@ -292,7 +292,6 @@ def formatera_html_matte(text: str) -> str:
         m = re.sub(r'_([a-zA-Z0-9]+)', r'<sub>\1</sub>', m)
         return m
 
-    # 1. Hantera uttryck inom $...$ (kursivera ensamma variabler där)
     def ersatt_dollar(match):
         m = formatera_del(match.group(1))
         delar = re.split(r'(<[^>]+>)', m)
@@ -302,7 +301,6 @@ def formatera_html_matte(text: str) -> str:
 
     text = re.sub(r'\$([^$]+?)\$', ersatt_dollar, text)
 
-    # 2. Hantera ^ och _ i övrig text utan att röra redan skapade HTML-taggar
     delar = re.split(r'(<[^>]+>)', text)
     for i in range(0, len(delar), 2):
         delar[i] = formatera_del(delar[i])
@@ -322,18 +320,4 @@ def visa_infobox(text: str, style: str):
         f"<div style='font-size: 20px; font-weight: bold; color: #333; margin-top: 20px; "
         f"background-color: {bg_color}; padding: 20px; border-radius: 10px; border-left: 6px solid {border_color};'>"
         f"{formaterad_text}</div>", unsafe_allow_html=True
-    )
-
-def visa_infobox(text: str, style: str):
-    colors = {
-        'blue': ('#0056b3', '#f8f9fa'),
-        'green': ('#28a745', '#e9ecef'),
-        'purple': ('#8B008B', '#f3e5f5'),
-        'pink': ('#e83e8c', '#fce4ec')
-    }
-    border_color, bg_color = colors.get(style, ('#333', '#f4f4f4'))
-    st.markdown(
-        f"<div style='font-size: 20px; font-weight: bold; color: #333; margin-top: 20px; "
-        f"background-color: {bg_color}; padding: 20px; border-radius: 10px; border-left: 6px solid {border_color};'>"
-        f"{text}</div>", unsafe_allow_html=True
     )
