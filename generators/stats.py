@@ -103,7 +103,9 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
             'kumulativ_2sigma',       # 97,7 %
             'asymmetrisk_81_8',       # 81,8 %
             'antal_observationer',
-            'baklanges_mu_sigma'
+            'baklanges_mu_sigma',
+            'baklanges_ensidig',
+            'gransvarde_andel'
         ])
 
         if fraga_typ == 'baklanges_mu_sigma':
@@ -120,6 +122,55 @@ def skapa_normalfordelning_uppgift(niva: int) -> Uppgift:
                 svarstyp="ordered_float",
                 flera_labels=[f"Medelvärde μ ({sc['enhet']}) =", f"Standardavvikelse σ ({sc['enhet']}) ="],
                 undertext="Utgå från normalfördelningskurvans symmetri och formelbladets procentsatser."
+            )
+
+        elif fraga_typ == 'baklanges_ensidig':
+            # 2,3 % är större än mu + 2*sigma, eller 15,9 % är större än mu + sigma
+            if random.choice(['2sigma', '1sigma']) == '2sigma':
+                grans = mu + 2 * sigma
+                pct_str = "2,3 %"
+                svar_mu = grans - 2 * sigma
+                undertext_txt = "2,3 % av värdena ligger mer än 2 standardavvikelser över medelvärdet (μ + 2σ)."
+            else:
+                grans = mu + sigma
+                pct_str = "15,9 %"
+                svar_mu = grans - sigma
+                undertext_txt = "15,9 % av värdena ligger mer än 1 standardavvikelse över medelvärdet (μ + σ)."
+
+            return Uppgift(
+                info_box_text=f"I en normalfördelning av {sc['namn']} är standardavvikelsen σ = {sigma} {sc['enhet']}. Det visar sig att {pct_str} av värdena är större än {grans} {sc['enhet']}.",
+                info_box_style="purple",
+                fraga=f"Bestäm medelvärdet μ (i {sc['enhet']}):",
+                ratt_svar=svar_mu,
+                input_typ="text",
+                svarstyp="int",
+                suffix=sc['enhet'],
+                undertext=undertext_txt
+            )
+
+        elif fraga_typ == 'gransvarde_andel':
+            # Bestäm gränsvärdet x som motsvarar en given svansandel (15,9 % eller 2,3 %)
+            if random.choice(['15_9_over', '2_3_over', '15_9_under']) == '15_9_over':
+                pct_str = "15,9 %"
+                riktning = "större än"
+                grans = mu + sigma
+            elif pct_str := ("2,3 %" if random.choice([True, False]) else "15,9 %"):
+                if pct_str == "2,3 %":
+                    riktning = "större än"
+                    grans = mu + 2 * sigma
+                else:
+                    riktning = "mindre än"
+                    grans = mu - sigma
+
+            return Uppgift(
+                info_box_text=f"En storhet ({sc['namn']}) är normalfördelad med medelvärde μ = {mu} {sc['enhet']} och standardavvikelse σ = {sigma} {sc['enhet']}.",
+                info_box_style="purple",
+                fraga=f"Ungefär {pct_str} av värdena förväntas vara {riktning} en viss gräns. Vilken är denna gräns (i {sc['enhet']})?",
+                ratt_svar=grans,
+                input_typ="text",
+                svarstyp="int",
+                suffix=sc['enhet'],
+                undertext="Avgör hur många standardavvikelser från μ som procentsatsen motsvarar."
             )
 
         if fraga_typ == 'kumulativ_1sigma':
@@ -284,7 +335,7 @@ def _skapa_laddiagram_figur(min_v: int, q1: int, median: int, q3: int, max_v: in
 
 
 def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
-    """Låddiagram (Boxplots), kvartiler, kvartilavstånd och variationsbredd med nivåprogression."""
+    """Låddiagram (Boxplots), kvartiler, kvartilavstånd, variationsbredd och spridningsmått."""
     q1 = random.randint(14, 24)
     median = q1 + random.randint(4, 9)
     q3 = median + random.randint(4, 9)
@@ -348,7 +399,13 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 )
 
     else:  # Nivå 2
-        typ = random.choice(['jamfor_laddiagram', 'andel_antal_kvartil', 'talmangd_kvartiler'])
+        typ = random.choice([
+            'jamfor_laddiagram',
+            'andel_antal_kvartil',
+            'talmangd_kvartiler',
+            'talmangd_jamnt',
+            'paverkan_matt'
+        ])
 
         if typ == 'jamfor_laddiagram':
             aspekt = random.choice(['median', 'iqr', 'variationsbredd'])
@@ -467,7 +524,7 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                 undertext="Varje delintervall i ett låddiagram motsvarar 25 % av observationerna."
             )
 
-        else:  # talmangd_kvartiler (7 eller 11 värden så att Q1, median och Q3 blir exakta heltal)
+        elif typ == 'talmangd_kvartiler':
             n_tal = random.choice([7, 11])
             start = random.randint(8, 18)
             sorterade = [start]
@@ -505,4 +562,73 @@ def skapa_laddiagram_uppgift(niva: int) -> Uppgift:
                     input_typ="text",
                     svarstyp="int",
                     undertext="Storleksordna talen, bestäm Q₁ och Q₃ och beräkna Q₃ − Q₁."
+                )
+
+        elif typ == 'talmangd_jamnt':
+            # 8 sorterade tal där medianen är medelvärdet av tal[3] och tal[4],
+            # undre halvan (4 tal) har Q1 = (tal[1] + tal[2])/2, övre halvan (4 tal) har Q3 = (tal[5] + tal[6])/2
+            # Vi väljer steg så att alla tre blir heltal
+            start = random.randint(10, 20)
+            s = [start]
+            steg_lista = [2, 2, 2, 2, 2, 2, 2]
+            for st in steg_lista:
+                s.append(s[-1] + st)
+            med_val = (s[3] + s[4]) // 2
+            q1_val = (s[1] + s[2]) // 2
+            q3_val = (s[5] + s[6]) // 2
+
+            blandade = s[:]
+            while blandade == s:
+                random.shuffle(blandade)
+            tal_str = ", ".join(str(x) for x in blandade)
+
+            return Uppgift(
+                info_box_text=f"Datamängd (8 värden): {tal_str}",
+                info_box_style="pink",
+                fraga="Bestäm medianen för datamängden:",
+                ratt_svar=med_val,
+                input_typ="text",
+                svarstyp="int",
+                undertext="Storleksordna först värdena. Eftersom det är ett jämnt antal värden är medianen medelvärdet av de två mittersta."
+            )
+
+        else:  # paverkan_matt
+            if random.choice(['addition_konstant', 'extremvarde']) == 'addition_konstant':
+                delta = random.choice([5, 10, 15])
+                ratt = "Endast medianen ändras (variationsbredden är oförändrad)"
+                alts = [
+                    "Endast medianen ändras (variationsbredden är oförändrad)",
+                    "Endast variationsbredden ändras (medianen är oförändrad)",
+                    "Både medianen och variationsbredden ökar med " + str(delta),
+                    "Varken medianen eller variationsbredden ändras"
+                ]
+                random.shuffle(alts)
+                return Uppgift(
+                    info_box_text=f"Varje värde i en datamängd ökas med {delta}.",
+                    info_box_style="pink",
+                    fraga="Hur påverkas medianen och variationsbredden?",
+                    ratt_svar=ratt,
+                    alternativ=alts,
+                    input_typ="radio",
+                    svarstyp="string",
+                    undertext="Ett spridningsmått som variationsbredden påverkas inte om alla värden förskjuts lika mycket."
+                )
+            else:
+                ratt = "Variationsbredden ändras, men medianen är oförändrad"
+                alts = [
+                    "Variationsbredden ändras, men medianen är oförändrad",
+                    "Medianen ändras, men variationsbredden är oförändrad",
+                    "Både medianen och variationsbredden ändras mycket",
+                    "Varken medianen eller variationsbredden ändras"
+                ]
+                random.shuffle(alts)
+                return Uppgift(
+                    info_box_text="Det största värdet i en datamängd byts ut mot ett betydligt större värde.",
+                    info_box_style="pink",
+                    fraga="Hur påverkas medianen och variationsbredden?",
+                    ratt_svar=ratt,
+                    alternativ=alts,
+                    input_typ="radio",
+                    svarstyp="string",
+                    undertext="Medianen är okänslig för extrema värden medan variationsbredden beror på skillnaden mellan max och min."
                 )
