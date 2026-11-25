@@ -6,7 +6,7 @@ from utils import formatera_polynom
 
 
 def skapa_potensregler_uppgift(niva: int) -> Uppgift:
-    """Potenslagarna (multiplikation, division, potens av potens, negativa exponenter och olika baser)."""
+    """Potenslagarna (multiplikation, division, potens av potens, negativa exponenter, bråkexponenter och olika baser)."""
     var = random.choice(['x', 'a', 'y'])
     if niva == 1:
         typ = random.choice([
@@ -94,7 +94,14 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
             krav_inga_parenteser=True
         )
     else:
-        typ = random.choice(['olika_baser', 'potens_produkt_neg', 'likadana_termer', 'potensekv_olika_baser'])
+        typ = random.choice([
+            'olika_baser',
+            'potens_produkt_neg',
+            'likadana_termer',
+            'potensekv_olika_baser',
+            'brak_exponent_varde',
+            'potensekv_brak_exp'
+        ])
         if typ == 'olika_baser':
             bas, mult_bas, k = random.choice([
                 (2, 4, 2), (2, 8, 3), (3, 9, 2), (3, 27, 3), (5, 25, 2)
@@ -114,8 +121,7 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
                 e1 = random.randint(2, 4)
                 e2 = random.randint(2, 4)
                 e3 = random.randint(1, 2)
-                if tot_exp := k * e1 + e2 - k * e3:
-                    pass
+                tot_exp = k * e1 + e2 - k * e3
                 if tot_exp <= 1:
                     e1 += 2
                     tot_exp = k * e1 + e2 - k * e3
@@ -185,7 +191,7 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
                 svarstyp="potensform",
                 undertext="Räkna hur många likadana potenstermer du har och skriv antalet som en potens."
             )
-        else:
+        elif typ == 'potensekv_olika_baser':
             bas, mult_bas, k = random.choice([
                 (2, 4, 2), (2, 8, 3), (3, 9, 2), (3, 27, 3), (5, 25, 2)
             ])
@@ -207,10 +213,59 @@ def skapa_potensregler_uppgift(niva: int) -> Uppgift:
                 svarstyp="int",
                 undertext=f"Skriv om båda leden som potenser med basen {bas}."
             )
+        elif typ == 'brak_exponent_varde':
+            val = random.choice([
+                ("8^{\\frac{1}{3}}", 2, "Upphöjningen till 1/3 motsvarar tredjeroten ur basen."),
+                ("16^{\\frac{1}{2}}", 4, "Upphöjningen till 1/2 motsvarar kvadratroten ur basen."),
+                ("27^{\\frac{1}{3}}", 3, "Upphöjningen till 1/3 motsvarar tredjeroten ur basen."),
+                ("81^{\\frac{1}{4}}", 3, "Upphöjningen till 1/4 motsvarar fjärderoten ur basen."),
+                ("4^{\\frac{3}{2}}", 8, "Skriv 4^(3/2) som (4^(1/2))^3 eller (4^3)^(1/2)."),
+                ("9^{\\frac{3}{2}}", 27, "Skriv 9^(3/2) som (9^(1/2))^3 eller (9^3)^(1/2).")
+            ])
+            expr_latex, ratt, tips = val
+            return Uppgift(
+                info_text="Beräkna värdet av potensuttrycket utan räknare:",
+                latex_text=expr_latex,
+                fraga="Ange uttryckets värde:",
+                ratt_svar=ratt,
+                input_typ="text",
+                svarstyp="int",
+                undertext=tips
+            )
+        else:
+            # Ekvationer av typen (x + a)^(1/n) = c eller x^(1/n) = c
+            if random.choice([True, False]):
+                n = random.choice([2, 3, 4])
+                c = random.choice([2, 3]) if n >= 3 else random.choice([2, 3, 4, 5])
+                a = random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
+                x_sol = (c ** n) - a
+                a_str = f"+ {a}" if a > 0 else f"- {abs(a)}"
+                return Uppgift(
+                    info_text="Lös ekvationen algebraiskt:",
+                    latex_text=f"(x {a_str})^{{\\frac{{1}}{{{n}}}}} = {c}",
+                    fraga="Bestäm x:",
+                    ratt_svar=x_sol,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext=f"Upphöj båda leden till {n} för att bli av med bråkexponenten."
+                )
+            else:
+                n = random.choice([2, 3])
+                c = random.choice([2, 3, 4])
+                x_sol = c ** n
+                return Uppgift(
+                    info_text="Lös ekvationen algebraiskt:",
+                    latex_text=f"x^{{\\frac{{1}}{{{n}}}}} = {c}",
+                    fraga="Bestäm x:",
+                    ratt_svar=x_sol,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext=f"Upphöj båda leden till {n}."
+                )
 
 
 def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
-    """Kvadrerings- och konjugatreglerna (utveckling, ekvationer och faktorisering)."""
+    """Kvadrerings- och konjugatreglerna (utveckling, ekvationer, faktorisering, extremvärden och resonemang)."""
     if niva == 1:
         typ = random.choice([
             'kvad1', 'kvad2', 'konjugat',
@@ -265,7 +320,9 @@ def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
             'ekvation_kvad_konj',
             'okand_konstant',
             'faktorisera_tva_steg',
-            'huvudrakning_konj'
+            'huvudrakning_konj',
+            'extremvarde_uttryck',
+            'foljandetal_resonemang'
         ])
         if typ == 'yttre_koeff_omvand':
             if random.choice([True, False]):
@@ -356,7 +413,7 @@ def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
                 undertext=tips
             )
 
-        else:
+        elif typ == 'huvudrakning_konj':
             if random.choice([True, False]):
                 summa = random.choice([12, 15, 18, 20, 25])
                 diff = random.choice([3, 4, 5, 6, 8])
@@ -384,6 +441,52 @@ def skapa_kvadrering_konjugat_uppgift(niva: int) -> Uppgift:
                     input_typ="text",
                     svarstyp="int",
                     undertext="Utnyttja konjugatregeln baklänges."
+                )
+
+        elif typ == 'extremvarde_uttryck':
+            # Skapar uttryck som förenklas till k*x^2 + c (där k > 0 ger minsta värde c, och k < 0 ger största värde c)
+            k = random.choice([-2, 2, 3])
+            p = random.randint(1, 4)
+            c = random.choice([-6, -4, 3, 5, 8])
+            # Utgångspunkt: k*(x + p)^2 + c - k*x^2 = 2*k*p*x + k*p^2 + c
+            # Vi väljer ett startuttryck av typen (k + 1)*x^2 + ... - x^2 så att x^2 blir k*x^2
+            uttryck = f"({k + 1}x + {p})^2 - x^2 - {2 * (k + 1) * p}x + {c - (k + 1) * (p ** 2)}"
+            extrem_typ = "minsta" if k > 0 else "största"
+            return Uppgift(
+                info_text="Förenkla uttrycket nedan och bestäm dess extremvärde:",
+                latex_text=uttryck,
+                fraga=f"Ange uttryckets {extrem_typ} värde:",
+                ratt_svar=c,
+                input_typ="text",
+                svarstyp="int",
+                undertext=f"Utveckla och förenkla uttrycket – undersök hur {extrem_typ} värdet uppnås för x."
+            )
+
+        else:
+            # På varandra följande heltal: (n + 1)^2 - (n - 1)^2 = 4n, eller (n + 1)^2 - n^2 = 2n + 1
+            if random.choice([True, False]):
+                n_val = random.randint(4, 15)
+                svar = 4 * n_val
+                return Uppgift(
+                    info_box_text="Låt $n$ vara ett heltal. Betrakta skillnaden mellan kvadraten på $(n + 1)$ och kvadraten på $(n - 1)$.",
+                    info_box_style="purple",
+                    fraga=f"Vilket värde får uttrycket (n + 1)² − (n − 1)² när n = {n_val}?",
+                    ratt_svar=svar,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Utveckla båda kvadraterna och förenkla: (n + 1)² − (n − 1)² = 4n."
+                )
+            else:
+                n_val = random.randint(4, 15)
+                svar = 2 * n_val + 1
+                return Uppgift(
+                    info_box_text="Skillnaden mellan kvadraterna på två på varandra följande heltal $n$ och $(n + 1)$ kan skrivas som $(n + 1)^2 - n^2$.",
+                    info_box_style="purple",
+                    fraga=f"Beräkna värdet av (n + 1)² − n² när n = {n_val}:",
+                    ratt_svar=svar,
+                    input_typ="text",
+                    svarstyp="int",
+                    undertext="Utveckla (n + 1)² och subtrahera n²."
                 )
 
 
@@ -572,7 +675,12 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
             undertext=tips
         )
     else:
-        typ = random.choice(['rationell_x_namnare', 'konstant_dubbelrot', 'baklanges_pq'])
+        typ = random.choice([
+            'rationell_x_namnare',
+            'konstant_dubbelrot',
+            'baklanges_pq',
+            'faktorisering_falla'
+        ])
         if typ == 'rationell_x_namnare':
             r1 = random.choice([-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6])
             r2 = random.choice([x for x in [-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6] if x != r1 and (r1 + x) != 0])
@@ -622,7 +730,7 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
                     svarstyp="int",
                     undertext="Skriv först ekvationen på formen x² + px + q = 0 och sätt därefter uttrycket under rottecknet till 0."
                 )
-        else:
+        elif typ == 'baklanges_pq':
             r1 = random.choice([-6, -5, -4, -3, -2, -1, 1, 2, 3, 4, 5, 6])
             r2 = random.choice([x for x in range(-6, 7) if x != r1 and (r1 + x) != 0])
             p = -(r1 + r2)
@@ -643,12 +751,30 @@ def skapa_pq_uppgift(niva: int) -> Uppgift:
                 svarstyp="int",
                 undertext="Sätt in den kända lösningen i ekvationen för att bestämma den okända konstanten först."
             )
+        else:
+            # Ekvationer av typen (x - a)^2 = c*(x - a) där division med (x - a) skulle tappa en rot
+            a = random.choice([-5, -4, -3, -2, 2, 3, 4, 5])
+            c = random.choice([-4, -3, -2, 2, 3, 4])
+            r1 = a
+            r2 = a + c
+            f_a = f"(x - {a})" if a > 0 else f"(x + {abs(a)})"
+            ekv_str = f"{f_a}^2 = {c}{f_a}"
+            return Uppgift(
+                info_text="Lös ekvationen algebraiskt:",
+                latex_text=ekv_str,
+                fraga="Ange ekvationens två lösningar:",
+                ratt_svar=sorted([float(r1), float(r2)]),
+                input_typ="flera_text",
+                svarstyp="array_float",
+                flera_labels=["x₁ =", "x₂ ="],
+                undertext="Flytta över högerledet och bryt ut den gemensamma parentesen i stället för att dividera bort den."
+            )
 
 
 def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
-    """Linjära ekvationssystem (grafiskt och algebraiskt)."""
+    """Linjära ekvationssystem (grafiskt, algebraiskt, decimaler och parametervillkor)."""
     if niva == 1:
-        typ = random.choice(['grafisk', 'substitution'])
+        typ = random.choice(['grafisk', 'substitution', 'addition'])
         x_sol = random.randint(-3, 4)
         y_sol = random.randint(-3, 4)
 
@@ -677,88 +803,122 @@ def skapa_ekvationssystem_uppgift(niva: int) -> Uppgift:
             ekv1_str = f"y = {formatera_polynom([(k1, 'x'), (m1, '')])}"
             ekv2_str = f"y = {formatera_polynom([(k2, 'x'), (m2, '')])}"
             return Uppgift(
-                info_text="Lös ekvationssystemet grafiskt med hjälp av figuren:",
+                info_text="Bestäm skärningspunkten (x, y) för linjerna i grafen:",
                 latex_text=f"\\begin{{cases}} {ekv1_str} \\\\ {ekv2_str} \\end{{cases}}",
-                plotly_fig=fig,
-                fraga="Avläs skärningspunktens koordinater (x och y):",
+                fraga="Ange lösningen till ekvationssystemet:",
                 ratt_svar=[float(x_sol), float(y_sol)],
                 input_typ="flera_text",
-                svarstyp="ekvationssystem",
+                svarstyp="array_float",
                 flera_labels=["x =", "y ="],
-                undertext="Läs av x- och y-koordinaten där linjerna korsar varandra."
+                undertext="Avläs koordinaterna där de två linjerna skär varandra.",
+                figur=fig
             )
-        else:
-            k = random.choice([-2, -1, 2, 3])
-            m = y_sol - k * x_sol
-            a = random.choice([2, 3, 4])
-            b = random.choice([1, 2])
-            c = a * x_sol + b * y_sol
 
-            ekv1 = f"y = {formatera_polynom([(k, 'x'), (m, '')])}"
-            ekv2 = f"{formatera_polynom([(a, 'x'), (b, 'y')])} = {c}"
+        elif typ == 'substitution':
+            a = random.choice([1, 2, 3])
+            b = random.choice([-3, -2, -1, 1, 2, 3])
+            y_sol = random.randint(-3, 4)
+            x_sol = a * y_sol + b
+            c = random.choice([1, 2])
+            d = random.choice([1, 2, 3])
+            hl2 = c * x_sol + d * y_sol
+
+            ekv1 = f"x = {formatera_polynom([(a, 'y'), (b, '')])}"
+            ekv2 = f"{formatera_polynom([(c, 'x'), (d, 'y')])} = {hl2}"
             return Uppgift(
                 info_text="Lös ekvationssystemet algebraiskt:",
                 latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
-                fraga="Ange lösningen (x och y):",
+                fraga="Bestäm x och y:",
                 ratt_svar=[float(x_sol), float(y_sol)],
                 input_typ="flera_text",
-                svarstyp="ekvationssystem",
+                svarstyp="array_float",
                 flera_labels=["x =", "y ="],
-                undertext="Använd substitutionsmetoden genom att ersätta y i den andra ekvationen."
+                undertext="Sätt in uttrycket för x från den första ekvationen i den andra ekvationen."
+            )
+
+        else:
+            x_sol = random.randint(-3, 4)
+            y_sol = random.randint(-3, 4)
+            a1, b1 = 2, 1
+            a2, b2 = 3, -1
+            hl1 = a1 * x_sol + b1 * y_sol
+            hl2 = a2 * x_sol + b2 * y_sol
+
+            ekv1 = f"{formatera_polynom([(a1, 'x'), (b1, 'y')])} = {hl1}"
+            ekv2 = f"{formatera_polynom([(a2, 'x'), (b2, 'y')])} = {hl2}"
+            return Uppgift(
+                info_text="Lös ekvationssystemet algebraiskt:",
+                latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
+                fraga="Bestäm x och y:",
+                ratt_svar=[float(x_sol), float(y_sol)],
+                input_typ="flera_text",
+                svarstyp="array_float",
+                flera_labels=["x =", "y ="],
+                undertext="Addera ekvationerna ledvis för att eliminera y."
             )
     else:
-        typ = random.choices(['forlang_bada', 'antal_losningar'], weights=[0.7, 0.3], k=1)[0]
-        if typ == 'forlang_bada':
-            x_sol = random.randint(-3, 5)
-            y_sol = random.randint(-3, 5)
-            par = random.choice([(2, 3), (3, 4), (2, 5), (3, 5)])
-            a1, a2 = random.sample(par, 2)
-            b1 = random.choice([-3, -2, 2, 3])
-            b2_kandidater = [v for v in [-4, -3, -2, 2, 3, 4] if v % b1 != 0 and b1 % v != 0 and (a1 * v - a2 * b1) != 0]
-            b2 = random.choice(b2_kandidater)
+        typ = random.choice(['decimal_system', 'omstuvning_system', 'oandligt_manga_losningar'])
+        if typ == 'decimal_system':
+            # System med decimaltal (t.ex. 0,5x + 0,2y = ... och x - y = ...)
+            x_sol = random.choice([-4, -2, 2, 4, 6])
+            y_sol = random.choice([-3, -1, 1, 3, 5])
+            d1 = 0.5
+            d2 = 0.2
+            hl1 = round(d1 * x_sol + d2 * y_sol, 2)
+            hl2 = x_sol - y_sol
+            hl1_str = str(hl1).replace('.', ',')
+            hl2_str = str(hl2).replace('.', ',')
 
-            c1 = a1 * x_sol + b1 * y_sol
-            c2 = a2 * x_sol + b2 * y_sol
-
-            ekv1 = f"{formatera_polynom([(a1, 'x'), (b1, 'y')])} = {c1}"
-            ekv2 = f"{formatera_polynom([(a2, 'x'), (b2, 'y')])} = {c2}"
+            ekv1 = f"0,5x + 0,2y = {hl1_str}"
+            ekv2 = f"x - y = {hl2_str}"
             return Uppgift(
                 info_text="Lös ekvationssystemet algebraiskt:",
                 latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
-                fraga="Ange lösningen (x och y):",
+                fraga="Bestäm x och y:",
                 ratt_svar=[float(x_sol), float(y_sol)],
                 input_typ="flera_text",
-                svarstyp="ekvationssystem",
+                svarstyp="array_float",
                 flera_labels=["x =", "y ="],
-                undertext="Använd additionsmetoden och förläng ekvationerna så att en variabel elimineras."
+                undertext="Multiplicera gärna den första ekvationen med 10 för att slippa decimaltal."
             )
-        else:
-            k = random.choice([-3, -2, 2, 3])
-            m1 = random.randint(-4, 4)
-            fall = random.choice(['parallella', 'sammanfallande'])
-            mult = random.choice([2, 3])
-            if fall == 'parallella':
-                m2 = m1 + random.choice([-3, -2, 2, 3])
-                ekv1 = f"y = {formatera_polynom([(k, 'x'), (m1, '')])}"
-                ekv2 = f"{formatera_polynom([(-mult * k, 'x'), (mult, 'y')])} = {mult * m2}"
-                ratt = "0 lösningar (linjerna är parallella)"
-            else:
-                ekv1 = f"y = {formatera_polynom([(k, 'x'), (m1, '')])}"
-                ekv2 = f"{formatera_polynom([(-mult * k, 'x'), (mult, 'y')])} = {mult * m1}"
-                ratt = "Oändligt många lösningar (samma linje)"
 
-            alts = [
-                "0 lösningar (linjerna är parallella)",
-                "1 lösning",
-                "Oändligt många lösningar (samma linje)"
-            ]
+        elif typ == 'omstuvning_system':
+            # Ekvationer med termer på båda sidor som behöver ordnas om först
+            x_sol = random.randint(-3, 4)
+            y_sol = random.randint(-3, 4)
+            # Ekv 1: 2x - y + c = d  => 2x - y = d - c
+            c = random.randint(1, 5)
+            d = 2 * x_sol - y_sol + c
+            # Ekv 2: x + 3y - e = f  => x + 3y = f + e
+            e = random.randint(1, 5)
+            f = x_sol + 3 * y_sol - e
+
+            ekv1 = f"2x - y + {c} = {d}"
+            ekv2 = f"x + 3y - {e} = {f}"
             return Uppgift(
-                info_text="Undersök följande ekvationssystem:",
+                info_text="Ordna om ekvationerna och lös systemet algebraiskt:",
                 latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
-                fraga="Hur många lösningar har ekvationssystemet?",
-                ratt_svar=ratt,
-                alternativ=alts,
-                input_typ="radio",
-                svarstyp="string",
-                undertext="Skriv om båda ekvationerna på k-form och jämför k- och m-värden."
+                fraga="Bestäm x och y:",
+                ratt_svar=[float(x_sol), float(y_sol)],
+                input_typ="flera_text",
+                svarstyp="array_float",
+                flera_labels=["x =", "y ="],
+                undertext="Samla x- och y-termer i vänsterledet och konstanterna i högerledet."
+            )
+
+        else:
+            # Oändligt många lösningar: t.ex. 2x + 3y = a och 6x + 9y = b => b = 3a
+            mult = random.choice([2, 3])
+            a_val = random.randint(2, 6)
+            ratt_b = mult * a_val
+            ekv1 = f"2x + 3y = {a_val}"
+            ekv2 = f"{2 * mult}x + {3 * mult}y = b"
+            return Uppgift(
+                info_text="Ekvationssystemet nedan ska ha oändligt många lösningar:",
+                latex_text=f"\\begin{{cases}} {ekv1} \\\\ {ekv2} \\end{{cases}}",
+                fraga="Bestäm konstanten b:",
+                ratt_svar=ratt_b,
+                input_typ="text",
+                svarstyp="int",
+                undertext="För oändligt många lösningar måste den andra ekvationen vara en multipel av den första."
             )
