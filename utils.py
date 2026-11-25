@@ -264,12 +264,11 @@ def ratta_svar(u: Uppgift, input_svar) -> str:
     return 'fel'
 
 def formatera_html_matte(text: str) -> str:
-    """Konverterar inline-LaTeX ($...$) till HTML så att det visas snyggt inuti div-taggar."""
-    if not text or "$" not in text:
+    """Formaterar både $...$-uttryck och enkla potenser/index (t.ex. x^2, x_1) till HTML."""
+    if not text:
         return text
 
-    def ersatt_matte(match):
-        m = match.group(1)
+    def formatera_del(m: str) -> str:
         ersattningar = [
             (r'\\cdot', '·'),
             (r'\\times', '×'),
@@ -291,13 +290,23 @@ def formatera_html_matte(text: str) -> str:
         m = re.sub(r'\^([a-zA-Z0-9+-]+)', r'<sup>\1</sup>', m)
         m = re.sub(r'_\{([^}]+)\}', r'<sub>\1</sub>', m)
         m = re.sub(r'_([a-zA-Z0-9]+)', r'<sub>\1</sub>', m)
+        return m
 
+    # 1. Hantera uttryck inom $...$ (kursivera ensamma variabler där)
+    def ersatt_dollar(match):
+        m = formatera_del(match.group(1))
         delar = re.split(r'(<[^>]+>)', m)
         for i in range(0, len(delar), 2):
-            delar[i] = re.sub(r'([a-zA-Z]+)', r'<i>\1</i>', delar[i])
+            delar[i] = re.sub(r'\b([a-zA-Z])\b', r'<i>\1</i>', delar[i])
         return "".join(delar)
 
-    return re.sub(r'\$([^$]+?)\$', ersatt_matte, text)
+    text = re.sub(r'\$([^$]+?)\$', ersatt_dollar, text)
+
+    # 2. Hantera ^ och _ i övrig text utan att röra redan skapade HTML-taggar
+    delar = re.split(r'(<[^>]+>)', text)
+    for i in range(0, len(delar), 2):
+        delar[i] = formatera_del(delar[i])
+    return "".join(delar)
 
 
 def visa_infobox(text: str, style: str):
