@@ -373,7 +373,7 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
 
             random.shuffle(alts)
             return Uppgift(
-                info_text="Grafen visar en funktion med markerade ändpunkter. Fylld cirkel betyder att gränsen ingår (≤), ofylld cirkel att den inte ingår (<):",
+                info_text=NONE,
                 plotly_fig=fig,
                 fraga=fraga_txt,
                 ratt_svar=ratt_svar,
