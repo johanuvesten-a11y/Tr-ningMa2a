@@ -5,6 +5,29 @@ from models import Uppgift
 from utils import formatera_polynom
 
 
+def _formatera_olikhet_intervall(var: str, low_val: int, low_sluten: bool, high_val: int, high_sluten: bool) -> str:
+    """Formaterar ett dubbelt intervall som t.ex. '2 ≤ x < 10'."""
+    op1 = "≤" if low_sluten else "<"
+    op2 = "≤" if high_sluten else "<"
+    return f"{low_val} {op1} {var} {op2} {high_val}"
+
+
+def _bygg_olikhets_alternativ(var: str, low_val: int, low_sluten: bool, high_val: int, high_sluten: bool) -> list[str]:
+    """Skapar rätt olikhetsintervall och tre distraktorer med olika kombinationer av < och ≤."""
+    ratt = _formatera_olikhet_intervall(var, low_val, low_sluten, high_val, high_sluten)
+    kandidater = [
+        _formatera_olikhet_intervall(var, low_val, True, high_val, True),
+        _formatera_olikhet_intervall(var, low_val, False, high_val, False),
+        _formatera_olikhet_intervall(var, low_val, True, high_val, False),
+        _formatera_olikhet_intervall(var, low_val, False, high_val, True),
+    ]
+    unika = []
+    for k in [ratt] + kandidater:
+        if k not in unika:
+            unika.append(k)
+    return unika[:4]
+
+
 def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
     """Räta linjens ekvation y = kx + m."""
     if niva == 1:
@@ -108,7 +131,7 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
                 undertext="Sätt in k-värdet och punktens koordinater i räta linjens ekvation."
             )
 
-        else:  # tva_punkter (heltals-k)
+        else:
             k = random.choice([-4, -3, -2, -1, 1, 2, 3, 4])
             m = random.randint(-6, 6)
             x1 = random.randint(-3, 2)
@@ -124,7 +147,7 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
                 undertext="Bestäm först riktningskoefficienten k och därefter m-värdet."
             )
 
-    else:  # Nivå 2
+    else:
         typ = random.choice([
             'tva_punkter_brak',
             'parallell',
@@ -193,7 +216,6 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
             )
 
         elif typ == 'vinkelrat_linje':
-            # Väljer k1 = 2 eller -2 så att k2 = -1/2 eller 1/2 och ger heltalspassning med jämnt px
             k1 = random.choice([-2, 2])
             k2_num = 1 if k1 < 0 else -1
             k2_den = 2
@@ -212,7 +234,7 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
                 undertext="För vinkelräta linjer gäller k₁ · k₂ = −1."
             )
 
-        else:  # k_och_punkt_brak
+        else:
             k_num = random.choice([-3, -1, 1, 3])
             k_den = 2
             k_val = k_num / k_den
@@ -232,7 +254,7 @@ def skapa_rata_linjen_uppgift(niva: int) -> Uppgift:
 
 
 def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
-    """Andragradsfunktioner, nollställen, symmetrilinje, extremvärde, parametrar och grafer."""
+    """Andragradsfunktioner, nollställen, symmetrilinje, extrempunkt, definitions-/värdemängd och grafer."""
     if niva == 1:
         r1 = random.randint(-4, 2)
         r2 = r1 + random.choice([2, 4, 6])
@@ -241,7 +263,7 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
         b = -a * (r1 + r2)
         c = a * r1 * r2
 
-        typ = random.choice(['symmetrilinje_nollstallen', 'avlas_c', 'symmetrilinje_graf'])
+        typ = random.choice(['symmetrilinje_nollstallen', 'avlas_c', 'symmetrilinje_graf', 'def_vardemangd_graf'])
         if typ == 'symmetrilinje_nollstallen':
             funk_str = f"f(x) = {formatera_polynom([(a, 'x^2'), (b, 'x'), (c, '')])}"
             return Uppgift(
@@ -277,6 +299,90 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
                     undertext="Fundera på vad f(0) blir."
                 )
 
+        elif typ == 'def_vardemangd_graf':
+            # Begränsad kurva med tydliga fyllda (sluten: ≤) och ofyllda (öppen: <) ändpunkter
+            x_start = random.randint(1, 3)
+            x_slut = x_start + random.randint(5, 8)
+            x_sluten = random.choice([True, False])
+            y_sluten = random.choice([True, False])
+
+            # Väljer y-värden så att ändpunkterna direkt ger min- och maxvärde för y
+            minskar = random.choice([True, False])
+            if minskar:
+                y_start = random.randint(7, 10)
+                y_slut = random.randint(1, 4)
+                # (x_start, y_start) är vänster/övre punkt, (x_slut, y_slut) är höger/undre punkt
+                p1_sluten, p2_sluten = x_sluten, y_sluten
+                y_low, y_high = y_slut, y_start
+                y_low_sluten, y_high_sluten = p2_sluten, p1_sluten
+            else:
+                y_start = random.randint(1, 4)
+                y_slut = random.randint(7, 10)
+                p1_sluten, p2_sluten = y_sluten, x_sluten
+                y_low, y_high = y_start, y_slut
+                y_low_sluten, y_high_sluten = p1_sluten, p2_sluten
+
+            # Mjuk kurva mellan (x_start, y_start) och (x_slut, y_slut)
+            t = np.linspace(0, 1, 150)
+            x_kurva = x_start + t * (x_slut - x_start)
+            y_kurva = y_start + (y_slut - y_start) * (t ** 1.4)
+
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(
+                x=x_kurva, y=y_kurva, mode='lines',
+                line=dict(color='#d9534f', width=3), hoverinfo='skip'
+            ))
+
+            # Första ändpunkten: fylld = ≤ (ingår), ofylld = < (ingår inte)
+            fig.add_trace(go.Scatter(
+                x=[x_start], y=[y_start], mode='markers',
+                marker=dict(
+                    size=10,
+                    color='#d9534f' if p1_sluten else 'white',
+                    line=dict(color='#d9534f', width=2.5)
+                ),
+                hoverinfo='skip'
+            ))
+
+            # Andra ändpunkten
+            fig.add_trace(go.Scatter(
+                x=[x_slut], y=[y_slut], mode='markers',
+                marker=dict(
+                    size=10,
+                    color='#d9534f' if p2_sluten else 'white',
+                    line=dict(color='#d9534f', width=2.5)
+                ),
+                hoverinfo='skip'
+            ))
+
+            fig.update_layout(
+                xaxis=dict(title="x", range=[0, x_slut + 2], dtick=1, zeroline=True, zerolinewidth=1.5, zerolinecolor='black', showgrid=True, gridcolor='#e8e8e8'),
+                yaxis=dict(title="y", range=[0, max(y_start, y_slut) + 2], dtick=1, zeroline=True, zerolinewidth=1.5, zerolinecolor='black', showgrid=True, gridcolor='#e8e8e8'),
+                height=360, margin=dict(l=20, r=20, t=20, b=20), plot_bgcolor='white', showlegend=False, hovermode=False
+            )
+
+            sok_def = random.choice([True, False])
+            if sok_def:
+                ratt_svar = _formatera_olikhet_intervall("x", x_start, x_sluten, x_slut, not x_sluten)
+                alts = _bygg_olikhets_alternativ("x", x_start, x_sluten, x_slut, not x_sluten)
+                fraga_txt = "Vilken är funktionens definitionsmängd?"
+            else:
+                ratt_svar = _formatera_olikhet_intervall("y", y_low, y_low_sluten, y_high, y_high_sluten)
+                alts = _bygg_olikhets_alternativ("y", y_low, y_low_sluten, y_high, y_high_sluten)
+                fraga_txt = "Vilken är funktionens värdemängd?"
+
+            random.shuffle(alts)
+            return Uppgift(
+                info_text="Grafen visar en funktion med markerade ändpunkter. Fylld cirkel betyder att gränsen ingår (≤), ofylld cirkel att den inte ingår (<):",
+                plotly_fig=fig,
+                fraga=fraga_txt,
+                ratt_svar=ratt_svar,
+                alternativ=alts,
+                input_typ="radio",
+                svarstyp="string",
+                undertext="Definitionsmängden avser tillåtna x-värden, värdemängden avser möjliga y-värden."
+            )
+
         x_vals = np.linspace(sym - 4, sym + 4, 200)
         y_vals = a * x_vals**2 + b * x_vals + c
         fig = go.Figure()
@@ -295,9 +401,11 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
             svarstyp="ekvation_x",
             undertext="Skriv svaret som en ekvation (t.ex. x = 2)."
         )
+
     else:
         typ = random.choice([
             'andra_nollstallet',
+            'extrempunkt_koordinater',
             'extremvarde_algebraiskt',
             'faktorform_nollstallen',
             'parameter_genom_punkt',
@@ -320,6 +428,26 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
                 input_typ="text",
                 svarstyp="int",
                 undertext="Utnyttja parabelns symmetri kring symmetrilinjen."
+            )
+
+        elif typ == 'extrempunkt_koordinater':
+            # Bestäm extrempunktens koordinater (x, y)
+            a = random.choice([1, -1])
+            sym = random.randint(-4, 4)
+            p = -2 * sym
+            q = random.randint(-6, 6)
+            funk_str = f"f(x) = {formatera_polynom([(a, 'x^2'), (a*p, 'x'), (q, '')])}"
+            extrem_y = a * (sym**2) + a * p * sym + q
+            punkt_typ = "minimipunktens" if a > 0 else "maximipunktens"
+            return Uppgift(
+                info_box_text=f"Givet andragradsfunktionen {funk_str}.",
+                info_box_style="blue",
+                fraga=f"Bestäm koordinaterna för {punkt_typ} (x och y):",
+                ratt_svar=[float(sym), float(extrem_y)],
+                input_typ="flera_text",
+                svarstyp="punkt",
+                flera_labels=["x =", "y ="],
+                undertext="Börja med att bestämma x-koordinaten via symmetrilinjen och sätt sedan in i f(x)."
             )
 
         elif typ == 'extremvarde_algebraiskt':
@@ -360,7 +488,6 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
             )
 
         elif typ == 'parameter_genom_punkt':
-            # f(x) = x^2 + ax + c där c är känt och punkten (px, py) ligger på kurvan
             c_val = random.choice([-6, -4, -2, 1, 3, 5])
             a_val = random.choice([-5, -3, -2, 2, 3, 5])
             px = random.choice([-3, -2, 2, 3])
@@ -377,12 +504,10 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
             )
 
         elif typ == 'skarning_linje_parabel':
-            # Skärning mellan f(x) = x^2 + bx + c och g(x) = kx + m ger x^2 + (b-k)x + (c-m) = 0
             x1 = random.choice([-3, -2, -1, 1])
             x2 = random.choice([x for x in [-1, 1, 2, 3, 4] if x != x1])
             k_lin = random.choice([-2, -1, 1, 2, 3])
             m_lin = random.choice([-3, -1, 1, 2, 4])
-            # Vi sätter g(x) = k_lin*x + m_lin och väljer b, c så att x1, x2 blir skärningspunkternas x-värden
             b_par = k_lin - (x1 + x2)
             c_par = m_lin + x1 * x2
             f_str = f"f(x) = {formatera_polynom([(1, 'x^2'), (b_par, 'x'), (c_par, '')])}"
@@ -398,7 +523,7 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
                 undertext="Sätt f(x) = g(x), samla allt i ett led och lös andragradsekvationen."
             )
 
-        else:  # graf_positiv_negativ
+        else:
             r1 = random.randint(-3, 0)
             r2 = r1 + random.choice([2, 3, 4])
             a = random.choice([1, -1])
@@ -453,7 +578,7 @@ def skapa_andragradsfunktion_uppgift(niva: int) -> Uppgift:
 
 
 def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
-    """Exponentialfunktioner och potensekvationer."""
+    """Exponentialfunktioner, byte av tidsenhet och potensekvationer."""
     if niva == 1:
         typ = random.choice(['exp_modell', 'tolka_procent'])
         if typ == 'exp_modell':
@@ -511,7 +636,8 @@ def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
             'potens_koeff',
             'potens_brak_exp',
             'baklanges_startvarde',
-            'forandring_ur_formel'
+            'forandring_ur_formel',
+            'byte_tidsenhet'
         ])
 
         if typ == 'baklanges_startvarde':
@@ -570,6 +696,24 @@ def skapa_exp_potens_uppgift(niva: int) -> Uppgift:
                 tolerans=0.1,
                 suffix="%",
                 undertext=f"Förändringsfaktorn är {ff_str}. Jämför med 1."
+            )
+
+        elif typ == 'byte_tidsenhet':
+            # Förändring per månad -> förändringsfaktor per år (12 månader)
+            procent = random.choice([2, 3, 4, 5, 8, 10])
+            minskar = random.choice([True, False])
+            ff_manad = (1 - procent / 100) if minskar else (1 + procent / 100)
+            ff_ar = round(ff_manad ** 12, 2)
+            verb = "minskar" if minskar else "ökar"
+            return Uppgift(
+                info_box_text=f"En storhet {verb} med {procent} % varje månad.",
+                info_box_style="blue",
+                fraga="Bestäm förändringsfaktorn per år (avrunda till två decimaler):",
+                ratt_svar=ff_ar,
+                input_typ="text",
+                svarstyp="float",
+                tolerans=0.02,
+                undertext=f"Månadsförändringsfaktorn är {str(round(ff_manad, 2)).replace('.', ',')}. På 1 år (12 månader) upphöjs den till 12."
             )
 
         else:
