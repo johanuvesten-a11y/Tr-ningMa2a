@@ -16,6 +16,7 @@ from generators.functions import (
 )
 from generators.geometry import skapa_geometri_uppgift
 from generators.stats import skapa_normalfordelning_uppgift, skapa_laddiagram_uppgift
+from generators.problemlosning import skapa_problemlosning_uppgift
 
 st.set_page_config(layout="wide", page_title="Matematik 2a Träning")
 
@@ -46,7 +47,8 @@ KATEGORIER = {
     "Exponential- & Potensfunktioner": skapa_exp_potens_uppgift,
     "Pythagoras sats & Geometri": skapa_geometri_uppgift,
     "Normalfördelning": skapa_normalfordelning_uppgift,
-    "Låddiagram & Kvartiler": skapa_laddiagram_uppgift
+    "Låddiagram & Kvartiler": skapa_laddiagram_uppgift,
+    "Problemlösning": skapa_problemlosning_uppgift
 }
 
 
@@ -56,7 +58,7 @@ def generera_ny_uppgift():
     st.session_state.uppgift_id = st.session_state.get('uppgift_id', 0) + 1
 
     kat = st.session_state.aktuell_kategori
-    niva = st.session_state.niva
+    niva = st.session_state.get('niva', 1)
 
     if kat == "Blandat (Slumpas)":
         val_kat = random.choice(list(KATEGORIER.keys()))
@@ -82,6 +84,9 @@ def hantera_svar():
     st.session_state.svar_status = ratta_svar(u, input_svar)
 
 
+if 'niva' not in st.session_state:
+    st.session_state.niva = 1
+
 # Menystyrning
 st.sidebar.title("Matematik 2a")
 vald_kategori = st.sidebar.radio("Välj område:", list(KATEGORIER.keys()) + ["Blandat (Slumpas)"])
@@ -93,7 +98,7 @@ if 'aktuell_kategori' not in st.session_state or st.session_state.aktuell_katego
     st.rerun()
 
 st.sidebar.divider()
-ny_niva = st.sidebar.radio("Svårighetsgrad:", [1, 2], horizontal=True, index=st.session_state.get('niva', 1) - 1)
+ny_niva = st.sidebar.radio("Svårighetsgrad:", [1, 2], horizontal=True, index=st.session_state.niva - 1)
 if ny_niva != st.session_state.niva:
     st.session_state.niva = ny_niva
     generera_ny_uppgift()
