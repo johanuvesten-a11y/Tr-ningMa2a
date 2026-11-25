@@ -46,7 +46,7 @@ def _rita_ratvinklig_triangel(a_vis: float, b_vis: float, lbl_botten: str, lbl_h
 
 
 def skapa_geometri_uppgift(niva: int) -> Uppgift:
-    """Pythagoras sats (algebraiska och flerstegsuppgifter), avståndsformeln och mittpunktsformeln."""
+    """Pythagoras sats, koordinatgeometri, likformighet, vinklar och cirkelavstånd."""
     if niva == 1:
         typ = random.choice([
             'pythagoras_alg_andragrad',
@@ -186,7 +186,11 @@ def skapa_geometri_uppgift(niva: int) -> Uppgift:
             'pythagoras_sammansatt',
             'pythagoras_romb',
             'omvand_mittpunkt',
-            'omvand_avstand'
+            'omvand_avstand',
+            'avstand_rotuttryck',
+            'likformighet_area',
+            'vinkel_likbent_alg',
+            'punkt_cirkel'
         ])
 
         if typ == 'pythagoras_likbent_area':
@@ -410,7 +414,7 @@ def skapa_geometri_uppgift(niva: int) -> Uppgift:
                 undertext="Ställ upp ekvationer med mittpunktsformeln: (x₁ + x₂)/2 = xₘ."
             )
 
-        else:
+        elif typ == 'omvand_avstand':
             dx, dy, dist = random.choice([(3, 4, 5), (6, 8, 10), (5, 12, 13), (8, 15, 17)])
             x1 = random.randint(-3, 4)
             x2 = x1 + dx * random.choice([-1, 1])
@@ -424,4 +428,101 @@ def skapa_geometri_uppgift(niva: int) -> Uppgift:
                 input_typ="text",
                 svarstyp="int",
                 undertext="Sätt in punkterna i avståndsformeln och lös ekvationen."
+            )
+
+        elif typ == 'avstand_rotuttryck':
+            # Avståndet blir sqrt(dx^2 + dy^2), avrundat till två decimaler med tolerans
+            dx, dy = random.choice([(2, 4), (3, 5), (4, 6), (2, 6), (3, 7)])
+            x1 = random.randint(-4, 3)
+            y1 = random.randint(-4, 3)
+            x2 = x1 + dx * random.choice([-1, 1])
+            y2 = y1 + dy * random.choice([-1, 1])
+            exakt = float(np.sqrt(dx**2 + dy**2))
+            return Uppgift(
+                info_box_text=f"Två punkter har koordinaterna A({x1}, {y1}) och B({x2}, {y2}).",
+                info_box_style="green",
+                fraga="Beräkna avståndet mellan punkterna A och B (avrunda till två decimaler):",
+                ratt_svar=round(exakt, 2),
+                input_typ="text",
+                svarstyp="float",
+                tolerans=0.02,
+                suffix="l.e.",
+                undertext=f"Avståndet är √({dx}² + {dy}²) = √{dx**2 + dy**2} l.e."
+            )
+
+        elif typ == 'likformighet_area':
+            # Två likformiga figurer: skalfaktor k på längder ger skalfaktor k^2 på arean
+            k = random.choice([2, 3, 4])
+            area_liten = random.randint(5, 18)
+            area_stor = area_liten * (k ** 2)
+            if random.choice([True, False]):
+                return Uppgift(
+                    info_box_text=f"Två likformiga trianglar har sidor som förhåller sig som 1 : {k}. Arean av den mindre triangeln är {area_liten} cm².",
+                    info_box_style="green",
+                    fraga="Beräkna arean av den större triangeln (i cm²):",
+                    ratt_svar=area_stor,
+                    input_typ="text",
+                    svarstyp="int",
+                    suffix="cm²",
+                    undertext=f"När sidlängderna multipliceras med {k} multipliceras arean med {k}²."
+                )
+            else:
+                return Uppgift(
+                    info_box_text=f"Två likformiga figurer har sidor som är {k} gånger längre i den större figuren än i den mindre. Arean av den större figuren är {area_stor} cm².",
+                    info_box_style="green",
+                    fraga="Beräkna arean av den mindre figuren (i cm²):",
+                    ratt_svar=area_liten,
+                    input_typ="text",
+                    svarstyp="int",
+                    suffix="cm²",
+                    undertext=f"Areasambandet mellan figurerna är {k}² = {k**2}."
+                )
+
+        elif typ == 'vinkel_likbent_alg':
+            # Likbent triangel: basvinklarna är (x + d) och toppvinkeln är 2x (eller omvänt)
+            # 2*(x + d) + 2x = 180 => 4x + 2d = 180 => x = (180 - 2d)/4
+            d = random.choice([6, 10, 14, 18, 22])
+            x_val = (180 - 2 * d) // 4
+            basvinkel = x_val + d
+            return Uppgift(
+                info_box_text=f"I en likbent triangel är vardera basvinkeln (x + {d})° och toppvinkeln är 2x°.",
+                info_box_style="green",
+                fraga="Beräkna storleken på en av basvinklarna (i grader):",
+                ratt_svar=basvinkel,
+                input_typ="text",
+                svarstyp="int",
+                suffix="°",
+                undertext="Vinkelsumman i en triangel är 180°. Ställ upp en ekvation för x och beräkna sedan (x + d)°."
+            )
+
+        else:  # punkt_cirkel
+            # Cirkel med medelpunkt M(mx, my) och radie r -> avgör om punkten P(px, py) ligger innanför, på eller utanför
+            mx = random.randint(-3, 3)
+            my = random.randint(-3, 3)
+            r = random.choice([4, 5, 6])
+            lage = random.choice(['pa', 'innanfor', 'utanfor'])
+            if lage == 'pa':
+                dx, dy = random.choice([(3, 4), (4, 3), (0, r), (r, 0)]) if r == 5 else (0, r)
+                svar = "På cirkeln"
+            elif lage == 'innanfor':
+                dx, dy = random.choice([(1, 1), (2, 1), (1, 2), (0, 2)])
+                svar = "Innanför cirkeln"
+            else:
+                dx, dy = r + 1, 2
+                svar = "Utanför cirkeln"
+
+            px = mx + dx * random.choice([-1, 1])
+            py = my + dy * random.choice([-1, 1])
+            alts = ["Innanför cirkeln", "På cirkeln", "Utanför cirkeln"]
+            random.shuffle(alts)
+
+            return Uppgift(
+                info_box_text=f"En cirkel har medelpunkten M({mx}, {my}) och radien {r} l.e. Betrakta punkten P({px}, {py}).",
+                info_box_style="green",
+                fraga="Hur ligger punkten P i förhållande till cirkeln?",
+                ratt_svar=svar,
+                alternativ=alts,
+                input_typ="radio",
+                svarstyp="string",
+                undertext="Jämför avståndet MP med cirkelns radie r."
             )
